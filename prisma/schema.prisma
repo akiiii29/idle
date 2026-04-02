@@ -1,0 +1,67 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id              String    @id
+  level           Int       @default(1)
+  exp             Int       @default(0)
+  gold            Int       @default(0)
+  str             Int       @default(5)
+  agi             Int       @default(5)
+  luck            Int       @default(1)
+  hp              Int       @default(100)
+  maxHp           Int       @default(100)
+  lastHunt        DateTime?
+  lastDaily       DateTime?
+  lastHpUpdatedAt DateTime  @default(now())
+  hospitalUntil   DateTime?
+  isBusy          Boolean   @default(false)
+  busyUntil       DateTime?
+  beasts          Beast[]
+  inventory       Item[]
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+}
+
+model Beast {
+  id         String   @id @default(uuid())
+  name       String
+  rarity     Rarity
+  power      Int
+  ownerId    String
+  capturedAt DateTime @default(now())
+  user       User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+
+  @@index([ownerId])
+}
+
+model Item {
+  id        String   @id @default(uuid())
+  name      String
+  type      ItemType
+  power     Int
+  quantity  Int      @default(1)
+  ownerId   String
+  user      User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+
+  @@index([ownerId])
+  @@unique([ownerId, name, type])
+}
+
+enum Rarity {
+  COMMON
+  RARE
+  EPIC
+  LEGENDARY
+}
+
+enum ItemType {
+  LUCK_BUFF
+  TRAP
+}
