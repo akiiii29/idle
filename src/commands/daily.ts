@@ -9,14 +9,14 @@ import type { SlashCommand } from "../types/command";
 export const dailyCommand: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName("daily")
-    .setDescription("Claim a daily gold bundle or a random item."),
+    .setDescription("Nhận phần thưởng vàng hằng ngày hoặc một vật phẩm ngẫu nhiên."),
   async execute(interaction) {
     try {
       const user = await getUser(interaction.user.id);
 
       if (!user) {
         await interaction.reply({
-          content: "You are not registered yet. Use `/register` first.",
+          content: "Bạn chưa đăng ký. Hãy dùng `/register` trước.",
           ephemeral: true
         });
         return;
@@ -25,7 +25,7 @@ export const dailyCommand: SlashCommand = {
       const remaining = getRemainingCooldown(user.lastDaily, DAILY_COOLDOWN_MS);
       if (remaining > 0) {
         await interaction.reply({
-          content: `Your daily reward is on cooldown for ${formatDuration(remaining)}.`,
+          content: `Phần thưởng hằng ngày của bạn đang trong thời gian chờ: ${formatDuration(remaining)}.`,
           ephemeral: true
         });
         return;
@@ -47,8 +47,8 @@ export const dailyCommand: SlashCommand = {
 
         const embed = new EmbedBuilder()
           .setColor(0xfee75c)
-          .setTitle("Daily Reward")
-          .setDescription(`You received **${item.name}**.`);
+          .setTitle("Phần thưởng hằng ngày")
+          .setDescription(`Bạn nhận được **${item.name}**.`);
 
         await interaction.reply({ embeds: [embed] });
         return;
@@ -65,14 +65,14 @@ export const dailyCommand: SlashCommand = {
 
       const embed = new EmbedBuilder()
         .setColor(0xfee75c)
-        .setTitle("Daily Reward")
-        .setDescription(`You claimed **${gold} gold**.`);
+        .setTitle("Phần thưởng hằng ngày")
+        .setDescription(`Bạn nhận được **${gold} vàng**.`);
 
       await interaction.reply({ embeds: [embed] });
     } catch (error) {
       console.error("daily command failed", error);
       await interaction.reply({
-        content: "Daily reward failed. Try again in a moment.",
+        content: "Nhận thưởng hằng ngày thất bại. Thử lại sau một chút.",
         ephemeral: true
       });
     }

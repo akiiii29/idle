@@ -3,20 +3,21 @@ import { EmbedBuilder, SlashCommandBuilder } from "discord.js";
 import { DAILY_COOLDOWN_MS, HUNT_COOLDOWN_MS } from "../constants/config";
 import { requiredExpForLevel } from "../services/leveling";
 import { buildXpBar, formatDuration, getRemainingCooldown, getUserWithRelations } from "../services/user-service";
+import { formatBeastEntry, formatSkillEntry, buildHpBar } from "../utils/rpg-ui";
 import type { SlashCommand } from "../types/command";
 
 export const profileCommand: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName("profile")
-    .setDescription("Show your hunter stats, progress, and inventory."),
+    .setDescription("Xem chỉ số thợ săn, tiến độ và hành trang của bạn."),
   async execute(interaction) {
     try {
+      await interaction.deferReply();
       const user = await getUserWithRelations(interaction.user.id);
 
       if (!user) {
-        await interaction.reply({
-          content: "You are not registered yet. Use `/register` first.",
-          ephemeral: true
+        await interaction.editReply({
+          content: "Bạn chưa đăng ký. Hãy dùng `/register` trước.",
         });
         return;
       }
@@ -24,47 +25,70 @@ export const profileCommand: SlashCommand = {
       const requiredExp = requiredExpForLevel(user.level);
       const topBeast = [...user.beasts].sort((a, b) => b.power - a.power)[0];
       const items = user.inventory.length
-        ? user.inventory.map((item) => `${item.name} x${item.quantity}`).join("\n")
-        : "Empty";
+        ? user.inventory.map((item: { name: string; quantity: number }) => `${item.name} x${item.quantity}`).join("\n")
+        : "Trống";
       const huntCd = getRemainingCooldown(user.lastHunt, HUNT_COOLDOWN_MS);
       const dailyCd = getRemainingCooldown(user.lastDaily, DAILY_COOLDOWN_MS);
       const hospitalCd = user.hospitalUntil ? user.hospitalUntil.getTime() - Date.now() : 0;
+      const tavernCd = user.tavernUntil ? user.tavernUntil.getTime() - Date.now() : 0;
+      const skills = (user as any).skills?.length
+        ? (user as any).skills.map((s: any) => formatSkillEntry(s)).join("\n")
+        : "_Không có_";
+
+      const titleStr = (user as any).title ? `\n**Danh hiệu:** \`${(user as any).title}\` ✨` : "";
 
       const embed = new EmbedBuilder()
         .setColor(0x5865f2)
-        .setTitle(`${interaction.user.username}'s Profile`)
-        .setDescription(`${buildXpBar(user.exp, requiredExp)} ${user.exp}/${requiredExp} XP`)
+        .setAuthor({ name: interaction.user.username, iconURL: interaction.user.displayAvatarURL() })
+        .setTitle(`Hồ sơ thợ săn của ${interaction.user.username}`)
+        .setThumbnail(interaction.user.displayAvatarURL())
+        .setDescription(`${titleStr}\n${buildXpBar(user.exp, requiredExp)} **${user.exp}/${requiredExp} Kinh nghiệm (XP)**`)
         .addFields(
-          { name: "Level", value: user.level.toString(), inline: true },
-          { name: "Gold", value: user.gold.toString(), inline: true },
-          { name: "HP", value: `${user.hp}/${user.maxHp}`, inline: true },
-          { name: "Stats", value: `STR ${user.str} | AGI ${user.agi} | LUCK ${user.luck}`, inline: false },
+          { name: "📊 Cấp độ", value: `\`${user.level}\``, inline: true },
+          { name: "💰 Vàng", value: `\`${user.gold}\``, inline: true },
+          { name: "❤️ Máu", value: buildHpBar(user.hp, user.maxHp), inline: true },
+          { 
+            name: "⚔️ Thuộc tính", 
+            value: `STR: \`${user.str}\` | AGI: \`${user.agi}\` | LUCK: \`${user.luck}\``, 
+            inline: false 
+          },
           {
-            name: "Top Beast",
-            value: topBeast ? `${topBeast.name} (${topBeast.rarity}) • ${topBeast.power} power` : "No beasts captured yet.",
+            name: "🐾 Sinh vật đồng hành mạnh nhất",
+            value: topBeast 
+              ? formatBeastEntry(topBeast as any)
+              : "_Không có_",
+            inline: true
+          },
+          {
+            name: "🎒 Hành trang",
+            value: items.length > 50 ? items.substring(0, 47) + "..." : items,
+            inline: true
+          },
+          {
+            name: "🔥 Kỹ năng chiến đấu",
+            value: skills,
             inline: false
           },
           {
-            name: "Inventory",
-            value: items,
-            inline: false
-          },
-          {
-            name: "Cooldowns",
-            value: `Hunt: ${huntCd > 0 ? formatDuration(huntCd) : "Ready"}\nDaily: ${dailyCd > 0 ? formatDuration(dailyCd) : "Ready"}${
-              hospitalCd > 0 ? `\nHospital: ${formatDuration(hospitalCd)}` : ""
-            }`,
+            name: "⏳ Trạng thái",
+            value:
+              `Đi săn: ${huntCd > 0 ? `\`${formatDuration(huntCd)}\`` : "✅ Sẵn sàng"}\n` +
+              `Hằng ngày: ${dailyCd > 0 ? `\`${formatDuration(dailyCd)}\`` : "✅ Sẵn sàng"}` +
+              (hospitalCd > 0 ? `\nBệnh viện: \`${formatDuration(hospitalCd)}\`` : "") +
+              (tavernCd > 0 ? `\nQuán trọ: \`${formatDuration(tavernCd)}\`` : ""),
             inline: false
           }
-        );
+        )
+        .setFooter({ text: "Cứ đi săn để trở thành Huyền thoại!" });
 
-      await interaction.reply({ embeds: [embed] });
+      await interaction.editReply({ embeds: [embed] });
     } catch (error) {
       console.error("profile command failed", error);
-      await interaction.reply({
-        content: "Profile lookup failed. Try again in a moment.",
-        ephemeral: true
-      });
+      if (interaction.deferred || interaction.replied) {
+        await interaction.editReply({ content: "Không thể tải hồ sơ. Thử lại sau một chút." });
+      } else {
+        await interaction.reply({ content: "Không thể tải hồ sơ. Thử lại sau một chút.", ephemeral: true });
+      }
     }
   }
 };

@@ -3,9 +3,13 @@ import "dotenv/config";
 import { Client, Events, GatewayIntentBits } from "discord.js";
 
 import { commands } from "./commands";
-import { handleCaptureButton } from "./commands/hunt";
+import { handleButtonInteraction } from "./commands/hunt";
+import { handleQuestClaim } from "./commands/quest";
+import { handleShopButton } from "./commands/shop";
 import { syncApplicationCommands } from "./services/command-sync";
 import { prisma } from "./services/prisma";
+import { syncQuests } from "./services/quest-service";
+import { handleUseAutocomplete } from "./commands/use";
 
 const token = process.env.DISCORD_TOKEN;
 const clientId = process.env.DISCORD_CLIENT_ID;
@@ -25,6 +29,8 @@ client.once(Events.ClientReady, async (readyClient) => {
   try {
     await syncApplicationCommands(token, clientId, guildId, commands);
     console.log(`Slash commands synced${guildId ? ` to guild ${guildId}` : " globally"}.`);
+    await syncQuests();
+    console.log("Quests synced.");
   } catch (error) {
     console.error("command sync failed", error);
   }
@@ -32,7 +38,20 @@ client.once(Events.ClientReady, async (readyClient) => {
 
 client.on(Events.InteractionCreate, async (interaction) => {
   if (interaction.isButton()) {
-    await handleCaptureButton(interaction);
+    const huntHandled = await handleButtonInteraction(interaction);
+      if (!huntHandled) {
+        const shopHandled = await handleShopButton(interaction);
+        if (!shopHandled) {
+          await handleQuestClaim(interaction);
+        }
+      }
+    return;
+  }
+
+  if (interaction.isAutocomplete()) {
+    if (interaction.commandName === "use") {
+      await handleUseAutocomplete(interaction);
+    }
     return;
   }
 
@@ -43,7 +62,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
   const command = commands.find((entry) => entry.data.name === interaction.commandName);
   if (!command) {
     await interaction.reply({
-      content: "Unknown command.",
+      content: "Không rõ lệnh.",
       ephemeral: true
     });
     return;

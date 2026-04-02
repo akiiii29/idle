@@ -8,25 +8,36 @@ datasource db {
 }
 
 model User {
-  id              String    @id
-  level           Int       @default(1)
-  exp             Int       @default(0)
-  gold            Int       @default(0)
-  str             Int       @default(5)
-  agi             Int       @default(5)
-  luck            Int       @default(1)
-  hp              Int       @default(100)
-  maxHp           Int       @default(100)
+  id              String      @id
+  level           Int         @default(1)
+  exp             Int         @default(0)
+  gold            Int         @default(0)
+  str             Int         @default(5)
+  agi             Int         @default(5)
+  luck            Int         @default(1)
+  // Max number of unique item stacks the player can hold.
+  inventoryLimit Int         @default(50)
+  // Remaining number of hunts Spirit Bond will buff top pet for.
+  spiritBondHuntsLeft Int    @default(0)
+  currentHp       Int         @default(100)
+  hp              Int         @default(100) // Keep for backward compatibility or as base HP
+  maxHp           Int         @default(100)
   lastHunt        DateTime?
   lastDaily       DateTime?
-  lastHpUpdatedAt DateTime  @default(now())
+  lastHpUpdatedAt DateTime    @default(now())
   hospitalUntil   DateTime?
-  isBusy          Boolean   @default(false)
+  title           String?
+  isBusy          Boolean     @default(false)
   busyUntil       DateTime?
   beasts          Beast[]
   inventory       Item[]
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  quests          UserQuest[]
+  skills          UserSkill[]
+  combatLogs      CombatLog[]
+  shopListings    ShopListing[]
+  tavernUntil     DateTime?
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
 }
 
 model Beast {
@@ -45,13 +56,55 @@ model Item {
   id        String   @id @default(uuid())
   name      String
   type      ItemType
-  power     Int
+  power     Int      @default(0)
   quantity  Int      @default(1)
+  
+  // New combat fields
+  bonusStr  Int      @default(0)
+  bonusAgi  Int      @default(0)
+  bonusDef  Int      @default(0)
+  bonusHp   Int      @default(0)
+  isEquipped Boolean @default(false)
+
   ownerId   String
   user      User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
 
   @@index([ownerId])
   @@unique([ownerId, name, type])
+}
+
+model Skill {
+  id          String      @id @default(uuid())
+  name        String      @unique
+  multiplier  Float       @default(1.0)
+  chance      Float       @default(0.1) // 0.0 to 1.0
+  userSkills  UserSkill[]
+}
+
+model UserSkill {
+  id      String @id @default(uuid())
+  userId  String
+  skillId String
+  user    User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  skill   Skill  @relation(fields: [skillId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, skillId])
+  @@index([userId])
+  @@index([skillId])
+}
+
+model CombatLog {
+  id          String   @id @default(uuid())
+  userId      String
+  enemyName   String
+  isWin       Boolean
+  logDetails  String   // Use larger text store
+  goldGained    Int      @default(0)
+  expGained     Int      @default(0)
+  createdAt   DateTime @default(now())
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }
 
 enum Rarity {
@@ -62,6 +115,72 @@ enum Rarity {
 }
 
 enum ItemType {
-  LUCK_BUFF
-  TRAP
+  WEAPON
+  ARMOR
+  HELMET
+  ACCESSORY
+  CONSUMABLE
+  POTION    // Healing potion
+  TRAP      // Legacy/Special
+  LUCK_BUFF // Legacy/Special
+  MEAT      // Legacy/Special
+  UTILITY
+  GAMBLE
+  BUFF
+  SITUATIONAL
+  PERMANENT
+  ENCOUNTER
+  RISK
+  CHAOS
+  PET_BUFF
+}
+
+enum QuestType {
+  DAILY
+  WEEKLY
+  ACHIEVEMENT
+}
+
+model Quest {
+  id              String      @id @default(uuid())
+  key             String      @unique
+  description     String
+  type            QuestType
+  target          Int
+  goldReward      Int         @default(0)
+  itemRewardName  String?
+  itemRewardType  ItemType?
+  itemRewardPower Int?
+  titleReward     String?
+  userQuests      UserQuest[]
+}
+
+model UserQuest {
+  id          String   @id @default(uuid())
+  userId      String
+  questId     String
+  progress    Int      @default(0)
+  isCompleted Boolean  @default(false)
+  isClaimed   Boolean  @default(false)
+  resetAt     DateTime
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  quest       Quest    @relation(fields: [questId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([questId])
+  @@unique([userId, questId])
+}
+
+// Daily shop rotation — 3 slots per user, refreshed each day
+model ShopListing {
+  id          String   @id @default(uuid())
+  userId      String
+  slot        Int      // 1, 2, or 3
+  itemKey     String   // Key from SHOP_CATALOG
+  purchased   Boolean  @default(false)
+  refreshedAt DateTime @default(now())
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, slot])
+  @@index([userId])
 }

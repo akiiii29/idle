@@ -5,12 +5,18 @@ export const HOSPITAL_COOLDOWN_MS = 30 * 60_000;
 export const DAILY_COOLDOWN_MS = 24 * 60 * 60_000;
 export const CAPTURE_TIMEOUT_MS = 30_000;
 export const HP_RECOVERY_INTERVAL_MS = 2 * 60_000;
+// Tavern rest: 1 minute heals 4 HP, i.e. 1 HP every 15 seconds.
+export const TAVERN_HEAL_HP_PER_MIN = 4;
+export const TAVERN_HEAL_INTERVAL_MS = 60_000 / TAVERN_HEAL_HP_PER_MIN; // 15_000
+// Gold cost scales linearly with the amount of HP you want to recover.
+export const TAVERN_GOLD_PER_HP = 1;
 export const XP_BAR_SIZE = 10;
 
 export const EVENT_RATES = {
-  combat: 60,
+  combat: 50,
   catch: 30,
-  fail: 10
+  chest: 15,
+  fail: 5
 } as const;
 
 export const RARITY_BASE_RATES: Record<Rarity, number> = {
@@ -18,13 +24,6 @@ export const RARITY_BASE_RATES: Record<Rarity, number> = {
   [Rarity.RARE]: 20,
   [Rarity.EPIC]: 8,
   [Rarity.LEGENDARY]: 2
-};
-
-export const RARITY_COLORS: Record<Rarity, number> = {
-  [Rarity.COMMON]: 0x808080,
-  [Rarity.RARE]: 0x3498db,
-  [Rarity.EPIC]: 0x9b59b6,
-  [Rarity.LEGENDARY]: 0xf1c40f
 };
 
 export const RARITY_POWER_RANGES: Record<Rarity, { min: number; max: number }> = {

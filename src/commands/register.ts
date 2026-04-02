@@ -6,7 +6,7 @@ import type { SlashCommand } from "../types/command";
 export const registerCommand: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName("register")
-    .setDescription("Create your RPG profile."),
+    .setDescription("Tạo hồ sơ RPG của bạn."),
   async execute(interaction) {
     try {
       const existing = await prisma.user.findUnique({
@@ -15,7 +15,7 @@ export const registerCommand: SlashCommand = {
 
       if (existing) {
         await interaction.reply({
-          content: "You are already registered.",
+          content: "Bạn đã đăng ký rồi.",
           ephemeral: true
         });
         return;
@@ -29,19 +29,23 @@ export const registerCommand: SlashCommand = {
 
       const embed = new EmbedBuilder()
         .setColor(0x57f287)
-        .setTitle(`${interaction.user.username} joined the hunt`)
-        .setDescription("Your RPG profile is ready.")
+        .setTitle(`${interaction.user.username} tham gia cuộc săn`)
+        .setDescription("Hồ sơ RPG của bạn đã sẵn sàng.")
         .addFields(
-          { name: "Level", value: user.level.toString(), inline: true },
-          { name: "HP", value: `${user.hp}/${user.maxHp}`, inline: true },
-          { name: "Stats", value: `STR ${user.str} | AGI ${user.agi} | LUCK ${user.luck}`, inline: false }
+          { name: "Cấp độ", value: user.level.toString(), inline: true },
+          { name: "Máu", value: `${user.hp}/${user.maxHp}`, inline: true },
+          {
+            name: "Thuộc tính",
+            value: `Sức mạnh ${user.str} | Nhanh nhẹn ${user.agi} | May mắn ${user.luck}`,
+            inline: false
+          }
         );
 
       await interaction.reply({ embeds: [embed] });
     } catch (error) {
       console.error("register command failed", error);
       await interaction.reply({
-        content: "Registration failed. Try again in a moment.",
+        content: "Đăng ký thất bại. Thử lại sau một chút.",
         ephemeral: true
       });
     }
