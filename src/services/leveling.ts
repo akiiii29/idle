@@ -38,10 +38,12 @@ export function applyLevelUps(stats: LevelableStats): LevelUpSummary {
     updated.str += strGain;
     updated.agi += agiGain;
     updated.luck += gainedLuck;
+    const hpGain = randomInt(5, 15);
+    updated.maxHp += hpGain;
     updated.hp = updated.maxHp;
 
     summaries.push(
-      `Level ${updated.level}: STR +${strGain}, AGI +${agiGain}${gainedLuck > 0 ? ", LUCK +1" : ""}`
+      `Level ${updated.level}: STR +${strGain}, AGI +${agiGain}${gainedLuck > 0 ? ", LUCK +1" : ""}, MAX HP +${hpGain}`
     );
   }
 

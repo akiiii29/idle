@@ -28,10 +28,11 @@ export interface CombatResult {
 
 export function resolveCombat(
   user: Pick<User, "level" | "exp" | "gold" | "str" | "agi" | "luck" | "hp" | "maxHp">,
-  now = new Date()
+  now = new Date(),
+  bonusStr = 0
 ): CombatResult {
   const monsterDef = randomInt(5, 15) + user.level;
-  const playerRoll = user.str + randomInt(0, 10);
+  const playerRoll = user.str + bonusStr + randomInt(0, 10);
 
   if (playerRoll >= monsterDef) {
     const expGained = randomInt(10, 20);
