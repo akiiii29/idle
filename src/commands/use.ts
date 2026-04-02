@@ -53,7 +53,7 @@ export const useCommand: SlashCommand = {
         return;
       }
 
-      if (user.hp >= user.maxHp) {
+      if (user.currentHp >= user.maxHp) {
         await interaction.reply({
           content: "Máu của bạn đã đầy!",
           ephemeral: true
@@ -62,7 +62,7 @@ export const useCommand: SlashCommand = {
       }
 
       const healAmount = item.power;
-      const newHp = Math.min(user.maxHp, user.hp + healAmount);
+      const newHp = Math.min(user.maxHp, user.currentHp + healAmount);
 
       await prisma.$transaction(async (tx) => {
         // Decrease quantity
@@ -81,7 +81,7 @@ export const useCommand: SlashCommand = {
         await tx.user.update({
           where: { id: user.id },
           data: { 
-            hp: newHp,
+            currentHp: newHp,
             lastHpUpdatedAt: new Date()
           }
         });
@@ -91,7 +91,7 @@ export const useCommand: SlashCommand = {
         .setColor(0x57f287)
         .setTitle("Vật phẩm đã được sử dụng")
         .setDescription(
-          `Bạn đã dùng **${item.name}** và hồi lại **${newHp - user.hp} máu**.\nTình trạng: **${newHp}/${user.maxHp} máu**`
+          `Bạn đã dùng **${item.name}** và hồi lại **${newHp - user.currentHp} máu**.\nTình trạng: **${newHp}/${user.maxHp} máu**`
         );
 
       await interaction.reply({ embeds: [embed] });

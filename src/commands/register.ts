@@ -33,7 +33,7 @@ export const registerCommand: SlashCommand = {
         .setDescription("Hồ sơ RPG của bạn đã sẵn sàng.")
         .addFields(
           { name: "Cấp độ", value: user.level.toString(), inline: true },
-          { name: "Máu", value: `${user.hp}/${user.maxHp}`, inline: true },
+          { name: "Máu", value: `${user.currentHp}/${user.maxHp}`, inline: true },
           {
             name: "Thuộc tính",
             value: `Sức mạnh ${user.str} | Nhanh nhẹn ${user.agi} | May mắn ${user.luck}`,

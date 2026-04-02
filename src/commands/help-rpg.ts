@@ -101,7 +101,7 @@ export const helpRpgCommand: SlashCommand = {
             `- Tốc độ hồi: ${tavernHealPerMin} HP/phút (mỗi ${formatDuration(tavernHealTickMs)} )\n` +
             `- Chi phí: ${tavernCostPerHp} vàng / 1 HP hồi\n\n` +
             "**Tùy chọn:**\n" +
-            "- hp: bạn muốn hồi tối đa bao nhiêu HP (mặc định hồi đến full).",
+            "- currentHp: bạn muốn hồi tối đa bao nhiêu HP (mặc định hồi đến full).",
           inline: false,
         },
         {

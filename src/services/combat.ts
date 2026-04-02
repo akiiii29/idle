@@ -20,14 +20,14 @@ export interface CombatResult {
     str: number;
     agi: number;
     luck: number;
-    hp: number;
+    currentHp: number;
     maxHp: number;
   };
   levelUp: LevelUpSummary | null;
 }
 
 export function resolveCombat(
-  user: Pick<User, "level" | "exp" | "gold" | "str" | "agi" | "luck" | "hp" | "maxHp">,
+  user: Pick<User, "level" | "exp" | "gold" | "str" | "agi" | "luck" | "currentHp" | "maxHp">,
   now = new Date(),
   bonusStr = 0
 ): CombatResult {
@@ -43,7 +43,7 @@ export function resolveCombat(
       str: user.str,
       agi: user.agi,
       luck: user.luck,
-      hp: user.hp,
+      currentHp: user.currentHp,
       maxHp: user.maxHp
     });
 
@@ -63,7 +63,7 @@ export function resolveCombat(
         str: levelUp.updated.str,
         agi: levelUp.updated.agi,
         luck: levelUp.updated.luck,
-        hp: levelUp.updated.hp,
+        currentHp: levelUp.updated.currentHp,
         maxHp: levelUp.updated.maxHp
       },
       levelUp
@@ -71,7 +71,7 @@ export function resolveCombat(
   }
 
   const damageTaken = randomInt(10, 20);
-  const hpAfterHit = user.hp - damageTaken;
+  const hpAfterHit = user.currentHp - damageTaken;
   const knockedOut = hpAfterHit <= 0;
   const expLost = knockedOut ? Math.min(50, user.exp) : 0;
 
@@ -91,7 +91,7 @@ export function resolveCombat(
       str: user.str,
       agi: user.agi,
       luck: user.luck,
-      hp: knockedOut ? 1 : Math.max(1, hpAfterHit),
+      currentHp: knockedOut ? 1 : Math.max(1, hpAfterHit),
       maxHp: user.maxHp
     },
     levelUp: null

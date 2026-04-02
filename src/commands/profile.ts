@@ -46,7 +46,7 @@ export const profileCommand: SlashCommand = {
         .addFields(
           { name: "📊 Cấp độ", value: `\`${user.level}\``, inline: true },
           { name: "💰 Vàng", value: `\`${user.gold}\``, inline: true },
-          { name: "❤️ Máu", value: buildHpBar(user.hp, user.maxHp), inline: true },
+          { name: "❤️ Máu", value: buildHpBar(user.currentHp, user.maxHp), inline: true },
           { 
             name: "⚔️ Thuộc tính", 
             value: `STR: \`${user.str}\` | AGI: \`${user.agi}\` | LUCK: \`${user.luck}\``, 

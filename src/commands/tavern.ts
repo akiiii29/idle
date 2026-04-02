@@ -51,7 +51,7 @@ export const tavernCommand: SlashCommand = {
         return;
       }
 
-      const missingHp = user.maxHp - user.hp;
+      const missingHp = user.maxHp - user.currentHp;
       if (missingHp <= 0) {
         await interaction.editReply({ content: "Máu của bạn đã đầy." });
         return;
@@ -106,7 +106,7 @@ export const tavernCommand: SlashCommand = {
             .addFields(
               {
                 name: "❤️ Máu",
-                value: `Hiện tại: \`${user.hp}/${user.maxHp}\` → +\`${healHp}\` máu`,
+                value: `Hiện tại: \`${user.currentHp}/${user.maxHp}\` → +\`${healHp}\` máu`,
                 inline: false
               },
               {

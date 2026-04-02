@@ -6,7 +6,7 @@ export interface LevelableStats {
   str: number;
   agi: number;
   luck: number;
-  hp: number;
+  currentHp: number;
   maxHp: number;
 }
 
@@ -40,7 +40,7 @@ export function applyLevelUps(stats: LevelableStats): LevelUpSummary {
     updated.luck += gainedLuck;
     const hpGain = randomInt(5, 15);
     updated.maxHp += hpGain;
-    updated.hp = updated.maxHp;
+    updated.currentHp = updated.maxHp;
 
     summaries.push(
       `Level ${updated.level}: STR +${strGain}, AGI +${agiGain}${gainedLuck > 0 ? ", LUCK +1" : ""}, MAX HP +${hpGain}`

@@ -138,14 +138,13 @@ export async function applyBeforeHuntItemEffects(params: {
       await consumeInventoryItem(tx, take.blood_vial, 1);
       effectiveStr += take.blood_vial.power; // +5 STR
 
-      const hpAfter = user.hp - 10;
+      const hpAfter = user.currentHp - 10;
       if (hpAfter <= 0) {
         shouldStopHunt = true;
         stopMessage = "Máu của bạn đã xuống quá thấp khi dùng Bình Máu. Bạn bị ngất và đang hồi phục tại bệnh viện.";
         await tx.user.update({
           where: { id: user.id },
           data: {
-            hp: 1,
             currentHp: 1,
             lastHpUpdatedAt: now,
             hospitalUntil: new Date(now.getTime() + HOSPITAL_COOLDOWN_MS),
@@ -156,7 +155,7 @@ export async function applyBeforeHuntItemEffects(params: {
 
       await tx.user.update({
         where: { id: user.id },
-        data: { hp: hpAfter, currentHp: hpAfter, lastHpUpdatedAt: now },
+        data: { currentHp: hpAfter, lastHpUpdatedAt: now },
       });
     }
 

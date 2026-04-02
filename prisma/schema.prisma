@@ -20,7 +20,6 @@ model User {
   // Remaining number of hunts Spirit Bond will buff top pet for.
   spiritBondHuntsLeft Int    @default(0)
   currentHp       Int         @default(100)
-  hp              Int         @default(100) // Keep for backward compatibility or as base HP
   maxHp           Int         @default(100)
   lastHunt        DateTime?
   lastDaily       DateTime?
@@ -74,19 +73,45 @@ model Item {
 }
 
 model Skill {
-  id          String      @id @default(uuid())
-  name        String      @unique
-  multiplier  Float       @default(1.0)
-  chance      Float       @default(0.1) // 0.0 to 1.0
+  id          String       @id @default(uuid())
+  name        String       @unique
+  type        SkillType    @default(DAMAGE)
+  trigger     SkillTrigger @default(ON_ATTACK)
+  multiplier  Float        @default(1.0)
+  chance      Float        @default(0.1) // 0.0 to 1.0
+
+  ignoreDef   Boolean      @default(false)
+  extraHit    Boolean      @default(false)
+  scaleWithHp Boolean      @default(false)
+  scaleWithPet Boolean     @default(false)
+
   userSkills  UserSkill[]
 }
 
+enum SkillType {
+  DAMAGE
+  DOT
+  DODGE
+  HEAL
+  GOLD
+  TAME
+  REDUCE_DAMAGE
+  CHAOS
+}
+
+enum SkillTrigger {
+  ON_ATTACK
+  ON_DEFEND
+  ON_TURN_START
+}
+
 model UserSkill {
-  id      String @id @default(uuid())
-  userId  String
-  skillId String
-  user    User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  skill   Skill  @relation(fields: [skillId], references: [id], onDelete: Cascade)
+  id         String @id @default(uuid())
+  userId     String
+  skillId    String
+  isEquipped Boolean @default(false)
+  user       User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  skill      Skill  @relation(fields: [skillId], references: [id], onDelete: Cascade)
 
   @@unique([userId, skillId])
   @@index([userId])

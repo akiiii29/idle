@@ -4,6 +4,7 @@ import { Client, Events, GatewayIntentBits } from "discord.js";
 
 import { commands } from "./commands";
 import { handleButtonInteraction } from "./commands/hunt";
+import { handleSkillButton } from "./commands/skills";
 import { handleQuestClaim } from "./commands/quest";
 import { handleShopButton } from "./commands/shop";
 import { syncApplicationCommands } from "./services/command-sync";
@@ -38,13 +39,16 @@ client.once(Events.ClientReady, async (readyClient) => {
 
 client.on(Events.InteractionCreate, async (interaction) => {
   if (interaction.isButton()) {
-    const huntHandled = await handleButtonInteraction(interaction);
+    const skillHandled = await handleSkillButton(interaction);
+    if (!skillHandled) {
+      const huntHandled = await handleButtonInteraction(interaction);
       if (!huntHandled) {
         const shopHandled = await handleShopButton(interaction);
         if (!shopHandled) {
           await handleQuestClaim(interaction);
         }
       }
+    }
     return;
   }
 

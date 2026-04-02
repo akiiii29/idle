@@ -12,7 +12,7 @@ import { prisma } from "./prisma";
 type DbClient = PrismaClient | Parameters<Parameters<typeof prisma.$transaction>[0]>[0];
 
 export interface HpUpdateResult {
-  hp: number;
+  currentHp: number;
   lastHpUpdatedAt: Date;
   recovered: number;
 }
@@ -20,7 +20,6 @@ export interface HpUpdateResult {
 export function getUpdatedHP(
   user: {
     currentHp: number;
-    hp: number;
     maxHp: number;
     lastHpUpdatedAt: Date;
     hospitalUntil: Date | null;
@@ -29,16 +28,15 @@ export function getUpdatedHP(
   now = new Date()
 ): HpUpdateResult {
   const lastUpdated = user.lastHpUpdatedAt ?? now;
-
-  const currentHp = user.currentHp ?? user.hp;
+  const currentHp = user.currentHp;
 
   if (currentHp >= user.maxHp) {
-    return { hp: user.maxHp, lastHpUpdatedAt: lastUpdated, recovered: 0 };
+    return { currentHp: user.maxHp, lastHpUpdatedAt: lastUpdated, recovered: 0 };
   }
 
   // Still in hospital — HP doesn't regen
   if (user.hospitalUntil && user.hospitalUntil > now) {
-    return { hp: currentHp, lastHpUpdatedAt: lastUpdated, recovered: 0 };
+    return { currentHp: currentHp, lastHpUpdatedAt: lastUpdated, recovered: 0 };
   }
 
   let hp = currentHp;
@@ -68,9 +66,9 @@ export function getUpdatedHP(
     if (tavernEnd.getTime() > now.getTime()) {
       // Tavern still ongoing: no passive regen while resting.
       if (hp === currentHp) {
-        return { hp, lastHpUpdatedAt, recovered: 0 };
+        return { currentHp: hp, lastHpUpdatedAt, recovered: 0 };
       }
-      return { hp, lastHpUpdatedAt: hp >= user.maxHp ? now : lastHpUpdatedAt, recovered: hp - currentHp };
+      return { currentHp: hp, lastHpUpdatedAt: hp >= user.maxHp ? now : lastHpUpdatedAt, recovered: hp - currentHp };
     }
   }
 
@@ -79,7 +77,7 @@ export function getUpdatedHP(
   const recovered = Math.floor(elapsedMs / HP_RECOVERY_INTERVAL_MS);
 
   if (recovered <= 0) {
-    return { hp, lastHpUpdatedAt, recovered: 0 };
+    return { currentHp: hp, lastHpUpdatedAt, recovered: 0 };
   }
 
   hp = Math.min(user.maxHp, hp + recovered);
@@ -87,7 +85,7 @@ export function getUpdatedHP(
   const timestamp = new Date(lastHpUpdatedAt.getTime() + consumedMs);
 
   return {
-    hp,
+    currentHp: hp,
     lastHpUpdatedAt: hp >= user.maxHp ? now : timestamp,
     recovered: hp - currentHp
   };
@@ -96,16 +94,15 @@ export function getUpdatedHP(
 export async function normalizeUserState(user: any, now = new Date()): Promise<any> {
   const data: Record<string, any> = {};
   const hpState = getUpdatedHP(user, now);
-  const currentHp = user.currentHp ?? user.hp;
+  const currentHp = user.currentHp;
 
-  if (hpState.hp !== currentHp || hpState.lastHpUpdatedAt.getTime() !== user.lastHpUpdatedAt.getTime()) {
-    data.currentHp = hpState.hp;
-    data.hp = hpState.hp;
+  if (hpState.currentHp !== currentHp || hpState.lastHpUpdatedAt.getTime() !== user.lastHpUpdatedAt.getTime()) {
+    data.currentHp = hpState.currentHp;
     data.lastHpUpdatedAt = hpState.lastHpUpdatedAt;
   }
 
   // If tavern healing already reached max HP early, stop resting immediately.
-  if (user.tavernUntil && user.tavernUntil > now && hpState.hp >= user.maxHp) {
+  if (user.tavernUntil && user.tavernUntil > now && hpState.currentHp >= user.maxHp) {
     data.tavernUntil = null;
     if (user.isBusy) {
       data.isBusy = false;
@@ -117,7 +114,6 @@ export async function normalizeUserState(user: any, now = new Date()): Promise<a
   if (user.hospitalUntil && user.hospitalUntil <= now) {
     data.hospitalUntil = null;
     data.currentHp = user.maxHp;
-    data.hp = user.maxHp;
     data.lastHpUpdatedAt = now;
   }
 
@@ -163,7 +159,6 @@ export async function reviveUser(userId: string): Promise<{ success: boolean; me
       data: {
         gold: { decrement: cost },
         currentHp: user.maxHp,
-        hp: user.maxHp,
         hospitalUntil: null,
         lastHpUpdatedAt: new Date()
       }

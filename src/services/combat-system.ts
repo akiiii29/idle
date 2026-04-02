@@ -6,6 +6,56 @@ import { getUserWithRelations } from "./user-service";
 import { randomInt } from "./rng";
 import { applyLevelUps } from "./leveling";
 
+export interface CombatContext {
+  player: { atk: number; def: number; spd: number; hp: number; maxHp: number; critRate: number; petPower: number; };
+  enemy: { atk: number; def: number; spd: number; hp: number; };
+  multipliers: { damage: number; gold: number; exp: number; };
+  flags: { dodged: boolean; ignoreDef: boolean; extraHit: boolean; };
+  extra: { bonusDamage: number; heal: number; reduceDamage: number; };
+}
+
+export const SKILL_HANDLERS: Record<string, (ctx: CombatContext, skill: any) => void> = {
+  DAMAGE: (ctx, skill) => { 
+    let addon = skill.multiplier;
+    if (skill.scaleWithHp) addon += (1 - (ctx.player.hp / ctx.player.maxHp));
+    if (skill.scaleWithPet) addon += (ctx.player.petPower * 0.01);
+    ctx.multipliers.damage += addon; 
+    if (skill.ignoreDef) ctx.flags.ignoreDef = true;
+    if (skill.extraHit) ctx.flags.extraHit = true;
+  },
+  DOT: (ctx, skill) => { ctx.extra.bonusDamage += ctx.player.atk * skill.multiplier; },
+  DODGE: (ctx) => { ctx.flags.dodged = true; },
+  HEAL: (ctx, skill) => { ctx.extra.heal += ctx.player.atk * skill.multiplier; },
+  GOLD: (ctx, skill) => { ctx.multipliers.gold += skill.multiplier; },
+  REDUCE_DAMAGE: (ctx, skill) => { ctx.extra.reduceDamage += skill.multiplier; },
+  CHAOS: (ctx, skill) => {
+    const roll = Math.random();
+    if (roll < 0.33) ctx.multipliers.damage += 0.5;
+    else if (roll < 0.66) ctx.extra.heal += ctx.player.maxHp * 0.2;
+    else ctx.extra.bonusDamage += ctx.player.atk;
+  },
+  TAME: () => {}
+};
+
+function applySkills(userSkills: any[], trigger: string, ctx: CombatContext): string[] {
+  const activatedSkills: string[] = [];
+  if (!userSkills || userSkills.length === 0) return activatedSkills;
+
+  for (const us of userSkills) {
+    const skill = us.skill;
+    if (skill.trigger !== trigger) continue;
+    if (Math.random() > skill.chance) continue;
+
+    const handler = SKILL_HANDLERS[skill.type];
+    if (handler) {
+      if (skill.type === "DODGE" && ctx.flags.dodged) continue; // Prevent multiple dodge procs
+      handler(ctx, skill);
+      activatedSkills.push(skill.name);
+    }
+  }
+  return activatedSkills;
+}
+
 export interface BattleResult {
   isWin: boolean;
   enemyName: string;
@@ -34,6 +84,7 @@ export interface HuntCombatModifiers {
 }
 
 export async function handleHunt(
+  interaction: any,
   userId: string,
   modifiers: HuntCombatModifiers = {}
 ): Promise<BattleResult | string> {
@@ -84,74 +135,169 @@ export async function handleHunt(
 
   // 3. Combat Loop
   const battleLogs: string[] = [];
-  let userCurrentHp = user.currentHp;
   let isWin = false;
   let turn = 1;
 
-  battleLogs.push(`⚔️ **${enemyName} xuất hiện!** (HP: ${enemyMaxHp})`);
+  const ctx: CombatContext = {
+    player: { atk: playerAtk, def: playerDef, spd: playerSpd, hp: user.currentHp, maxHp: user.maxHp, critRate, petPower: topBeast ? topBeast.power : 0 },
+    enemy: { atk: enemyAtk, def: enemyDef, spd: enemySpd, hp: enemyHp },
+    multipliers: { damage: playerDamageMultiplier, gold: goldMultiplier, exp: expMultiplier },
+    flags: { dodged: false, ignoreDef: false, extraHit: false },
+    extra: { bonusDamage: 0, heal: 0, reduceDamage: 0 }
+  };
 
-  while (turn <= 20 && userCurrentHp > 0 && enemyHp > 0) {
-    battleLogs.push(`\n**[Lượt ${turn}]**`);
+  const equippedSkills = user.skills.filter((s: any) => s.isEquipped);
+
+  const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+  const displayedLogs: string[] = [];
+
+  const pushLog = async (newLogs: string[]) => {
+    displayedLogs.push(...newLogs);
+    battleLogs.push(...newLogs);
+    const fullLog = displayedLogs.join("\n");
+    const textToDisplay = fullLog.length > 3500 ? "..." + fullLog.substring(fullLog.length - 3500) : fullLog;
     
+    const embed = new EmbedBuilder()
+      .setColor(0x3498db)
+      .setTitle("⚔️ Đang chiến đấu...")
+      .setDescription(textToDisplay);
+      
+    try {
+      if (interaction) await interaction.editReply({ embeds: [embed], components: [] });
+    } catch (e) {
+      console.error("Progressive log edit failed", e);
+    }
+  };
+
+  await pushLog([`⚔️ **${enemyName} xuất hiện!** (HP: ${enemyMaxHp})`]);
+
+  while (turn <= 20 && ctx.player.hp > 0 && ctx.enemy.hp > 0) {
+    const turnLogs: string[] = [];
+    turnLogs.push(`\n**[Lượt ${turn}]**`);
+    
+    // ON_TURN_START skills
+    const turnStartSkills = applySkills(equippedSkills, "ON_TURN_START", ctx);
+    if (turnStartSkills.length > 0) {
+      turnLogs.push(`🌟 Kỹ năng đầu lượt kích hoạt: ${turnStartSkills.join(", ")}`);
+      // Since it's turn start, we can apply heal now if generated
+      if (ctx.extra.heal > 0) {
+        ctx.player.hp += Math.floor(ctx.extra.heal);
+        ctx.player.hp = Math.min(ctx.player.hp, user.maxHp);
+        turnLogs.push(`💚 Bạn hồi phục ${Math.floor(ctx.extra.heal)} HP.`);
+        ctx.extra.heal = 0; // reset after applying
+      }
+      if (ctx.extra.bonusDamage > 0) {
+        ctx.enemy.hp -= Math.floor(ctx.extra.bonusDamage);
+        turnLogs.push(`🔥 Quái thú bị thiêu đốt chịu ${Math.floor(ctx.extra.bonusDamage)} sát thương. (HP quái: ${Math.max(0, ctx.enemy.hp)})`);
+        ctx.extra.bonusDamage = 0; // reset after applying
+      }
+    }
+
+    if (ctx.enemy.hp <= 0) break;
+
     // SPD determines who hits first
-    const participants = playerSpd >= enemySpd 
+    const participants = ctx.player.spd >= ctx.enemy.spd 
       ? [{ name: "Player", side: "user" }, { name: enemyName, side: "enemy" }]
       : [{ name: enemyName, side: "enemy" }, { name: "Player", side: "user" }];
 
     for (const p of participants) {
-      if (userCurrentHp <= 0 || enemyHp <= 0) break;
+      if (ctx.player.hp <= 0 || ctx.enemy.hp <= 0) break;
 
+      // 1. Before attack: reset
+      ctx.flags.dodged = false;
+      ctx.flags.ignoreDef = false;
+      ctx.flags.extraHit = false;
+      ctx.multipliers.damage = playerDamageMultiplier;
+      ctx.extra.bonusDamage = 0;
+      ctx.extra.heal = 0;
+      ctx.extra.reduceDamage = 0;
+
+      let activatedSkills: string[] = [];
+
+      // 2. Apply skill effects by timing
       if (p.side === "user") {
-        // Player's turn
-        let multiplier = 1.0;
-        let skillUsed = "";
-        
-        // Random Skill Check
-        if (user.skills.length > 0) {
-          const us = user.skills[randomInt(0, user.skills.length - 1)];
-          if (Math.random() < us.skill.chance) {
-            multiplier = us.skill.multiplier;
-            skillUsed = us.skill.name;
-          }
-        }
-
-        const isCrit = Math.random() < critRate;
-        const baseDamage =
-          playerAtk * (isCrit ? 1.5 : 1.0) * multiplier * playerDamageMultiplier;
-        const damage = Math.max(1, Math.floor(baseDamage - enemyDef));
-        
-        enemyHp -= damage;
-        const critText = isCrit ? "💥 **ĐÁNH CHÍ MẠNG!** " : "";
-        const skillText = skillUsed ? ` khi dùng **${skillUsed}**` : "";
-        battleLogs.push(`🔹 Bạn tấn công${skillText} gây ${critText}${damage} sát thương. (HP quái: ${Math.max(0, enemyHp)})`);
+        activatedSkills = applySkills(equippedSkills, "ON_ATTACK", ctx);
       } else {
-        // Enemy's turn
-        const damage = Math.max(1, Math.floor(enemyAtk - playerDef));
-        userCurrentHp -= damage;
-        battleLogs.push(`🔸 **${enemyName}** đánh trúng bạn gây ${damage} sát thương. (HP của bạn: ${Math.max(0, userCurrentHp)})`);
+        activatedSkills = applySkills(equippedSkills, "ON_DEFEND", ctx);
+      }
+
+      const skillsStr = activatedSkills.length > 0 ? ` (kỹ năng: **${activatedSkills.join(", ")}**)` : "";
+
+      // 3. If dodged: skip damage
+      if (ctx.flags.dodged) {
+        if (p.side === "enemy") {
+          turnLogs.push(`🔸 **${enemyName}** tấn công nhưng bạn đã né được!${skillsStr}`);
+        } else {
+          turnLogs.push(`🔹 Bạn tấn công nhưng bị né!${skillsStr}`);
+        }
+      } else {
+        // 4. Apply damage
+        if (p.side === "user") {
+          const isCrit = Math.random() < ctx.player.critRate;
+          const baseDamage = ctx.player.atk * (isCrit ? 1.5 : 1.0) * ctx.multipliers.damage;
+          
+          const enemyDef = ctx.flags.ignoreDef ? 0 : ctx.enemy.def;
+          let hitDamage = Math.max(1, Math.floor(baseDamage - enemyDef));
+          
+          const hits = ctx.flags.extraHit ? 2 : 1;
+          const totalDamage = hitDamage * hits + Math.floor(ctx.extra.bonusDamage);
+          
+          ctx.enemy.hp -= totalDamage;
+          const critText = isCrit ? "💥 **ĐÁNH CHÍ MẠNG!** " : "";
+          const extraText = ctx.flags.extraHit ? " (Đánh bồi!)" : "";
+          turnLogs.push(`🔹 Bạn tấn công${skillsStr} gây ${critText}${totalDamage} sát thương${extraText}. (HP quái: ${Math.max(0, ctx.enemy.hp)})`);
+        } else {
+          // Enemy's turn
+          let damage = Math.max(1, ctx.enemy.atk - ctx.player.def);
+          if (ctx.extra.reduceDamage > 0) {
+            const reduction = Math.min(0.9, ctx.extra.reduceDamage);
+            damage = damage * (1 - reduction);
+          }
+          damage = Math.floor(damage);
+
+          ctx.player.hp -= damage;
+          turnLogs.push(`🔸 **${enemyName}** đánh trúng bạn gây ${damage} sát thương. (HP của bạn: ${Math.max(0, ctx.player.hp)})`);
+        }
+      }
+
+      // 5. After attack: apply heal
+      if (ctx.extra.heal > 0) {
+        ctx.player.hp += Math.floor(ctx.extra.heal);
+        ctx.player.hp = Math.min(ctx.player.hp, user.maxHp);
+        turnLogs.push(`💚 Bạn hồi phục ${Math.floor(ctx.extra.heal)} HP.`);
       }
     }
     
+    await pushLog(turnLogs);
+    if (ctx.player.hp > 0 && ctx.enemy.hp > 0) {
+      await sleep(800); // progressive update per turn
+    }
     turn++;
   }
 
-  isWin = enemyHp <= 0;
-  if (!isWin && userCurrentHp > 0) {
-    battleLogs.push("\n⏳ **Trận đấu kết thúc hòa!** (Đã chạm giới hạn 20 lượt)");
+  const finalLogs: string[] = [];
+  isWin = ctx.enemy.hp <= 0;
+  if (!isWin && ctx.player.hp > 0) {
+    finalLogs.push("\n⏳ **Trận đấu kết thúc hòa!** (Đã chạm giới hạn 20 lượt)");
   }
 
   // 4. Rewards & Stats
   const goldGainedBase = isWin ? randomInt(20, 50) + (lvl * 10) : 0;
   const expGainedBase = isWin ? 10 + (lvl * 5) : 0;
-  const goldGained = Math.max(0, Math.floor(goldGainedBase * goldMultiplier));
-  const expGained = Math.max(0, Math.floor(expGainedBase * expMultiplier));
-  const hpLost = user.currentHp - userCurrentHp;
+  const goldGained = Math.max(0, Math.floor(goldGainedBase * ctx.multipliers.gold));
+  const expGained = Math.max(0, Math.floor(expGainedBase * ctx.multipliers.exp));
+  const hpLost = user.currentHp - ctx.player.hp;
 
   let hospitalUntil: Date | undefined;
-  if (userCurrentHp <= 0) {
-    userCurrentHp = 0;
+  if (ctx.player.hp <= 0) {
+    ctx.player.hp = 0;
     hospitalUntil = new Date(Date.now() + 30 * 60 * 1000); // 30 mins
-    battleLogs.push("\n🚑 **Bạn gục ngã và được đưa đến bệnh viện!**");
+    finalLogs.push("\n🚑 **Bạn gục ngã và được đưa đến bệnh viện!**");
+  }
+
+  if (finalLogs.length > 0) {
+    await pushLog(finalLogs);
+    await sleep(400); // mini buffer before rendering the final result
   }
 
   // 5. Update Database
@@ -163,7 +309,7 @@ export async function handleHunt(
     expGained,
     hpLost,
     hospitalUntil,
-    finalHp: userCurrentHp
+    finalHp: ctx.player.hp
   };
 
   await prisma.$transaction(async (tx) => {
@@ -172,7 +318,7 @@ export async function handleHunt(
       data: {
         gold: { increment: goldGained },
         exp: { increment: expGained },
-        currentHp: userCurrentHp,
+        currentHp: ctx.player.hp,
         hospitalUntil: hospitalUntil || null
       }
     });

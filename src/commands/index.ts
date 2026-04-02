@@ -8,6 +8,7 @@ import { reviveCommand } from "./revive";
 import { tavernCommand } from "./tavern";
 import { shopCommand } from "./shop";
 import { helpRpgCommand } from "./help-rpg";
+import { skillsCommand } from "./skills";
 
 export const commands = [
   registerCommand,
@@ -19,5 +20,6 @@ export const commands = [
   reviveCommand,
   tavernCommand,
   shopCommand,
-  helpRpgCommand
+  helpRpgCommand,
+  skillsCommand
 ];

@@ -10,28 +10,22 @@ import {
 import { ItemType } from "@prisma/client";
 
 import { CAPTURE_TIMEOUT_MS, EVENT_RATES, HUNT_COOLDOWN_MS } from "../constants/config";
-import { RARITY_COLORS, RARITY_BANNER, RARITY_BADGE, buildHpBar, randomRpgFooter, type Rarity } from "../utils/rpg-ui";
-import { handleHunt } from "../services/combat-system";
-import { applyBeforeHuntItemEffects } from "../services/itemEffects";
+import { RARITY_COLORS, RARITY_BADGE, type Rarity } from "../utils/rpg-ui";
 import { createHuntPreviewToken, consumeHuntPreview, type HuntPreviewBranch } from "../services/pending-hunt-preview";
 import {
   buildBeastButtons,
   buildChestButtons,
   consumePendingEncounter,
-  createEncounterToken,
   peekPendingEncounter,
-  startPendingEncounter,
-  startPendingChest,
   peekPendingChest,
   consumePendingChest
 } from "../services/encounter-service";
-import { createWildBeast } from "../services/hunt-service";
-import { applyLevelUps } from "../services/leveling";
 import { prisma } from "../services/prisma";
 import { updateQuestProgress } from "../services/quest-service";
 import { randomInt } from "../services/rng";
 import { formatDuration, getRemainingCooldown, getUser, getUserWithRelations, upsertItem } from "../services/user-service";
 import type { SlashCommand } from "../types/command";
+import { checkUserStatusErrors, performCoreHunt } from "../services/hunt-core";
 
 export const huntCommand: SlashCommand = {
   data: new SlashCommandBuilder()
@@ -59,8 +53,6 @@ export const huntCommand: SlashCommand = {
         .setMaxValue(1)
     ) as any,
   async execute(interaction) {
-    let shouldReleaseBusy = false;
-
     try {
       await interaction.deferReply();
       const now = new Date();
@@ -73,35 +65,9 @@ export const huntCommand: SlashCommand = {
         return;
       }
 
-      if (user.hospitalUntil && user.hospitalUntil > now) {
-        await interaction.editReply({
-          content: `Bạn đang ở bệnh viện trong ${formatDuration(user.hospitalUntil.getTime() - now.getTime())}.`,
-        });
-        return;
-      }
-
-      if (user.isBusy) {
-        const tavernLeftMs =
-          user.tavernUntil && user.tavernUntil > now ? user.tavernUntil.getTime() - now.getTime() : 0;
-        const busyLeftMs = user.busyUntil && user.busyUntil > now ? user.busyUntil.getTime() - now.getTime() : 0;
-
-        if (tavernLeftMs > 0) {
-          await interaction.editReply({
-            content: `Bạn đang nghỉ tại quán trọ trong ${formatDuration(tavernLeftMs)}. Hãy thử lại sau khi nghỉ xong.`,
-          });
-          return;
-        }
-
-        if (busyLeftMs > 0) {
-          await interaction.editReply({
-            content: `Bạn đang bận ngay lúc này (đang đi săn). Còn ${formatDuration(busyLeftMs)}.`,
-          });
-          return;
-        }
-
-        await interaction.editReply({
-          content: "Bạn đang bận ngay lúc này. Vui lòng thử lại sau.",
-        });
+      const statusErr = checkUserStatusErrors(user, now);
+      if (statusErr) {
+        await interaction.editReply({ content: statusErr });
         return;
       }
 
@@ -114,19 +80,16 @@ export const huntCommand: SlashCommand = {
 
       const userTrapObj = user.inventory.find((i: any) => i.type === ItemType.TRAP);
       const trapsOwned = userTrapObj?.quantity ?? 0;
-      const trapPower = userTrapObj?.power ?? 1;
 
       const userCloverObj = user.inventory.find((i: any) => i.type === ItemType.LUCK_BUFF);
       const cloversOwned = userCloverObj?.quantity ?? 0;
       const cloverPower = userCloverObj?.power ?? 1;
 
-      // Scout Lens owned check (by name, because catalog entry uses name "Scout Lens").
       const scoutLensObj = user.inventory.find((i: any) => i.name === "Scout Lens");
       const scoutsOwned = scoutLensObj?.quantity ?? 0;
+
       if (scoutsWanted > 1) {
-        await interaction.editReply({
-          content: "Bạn chỉ có thể dùng tối đa 1 Scout Lens cho mỗi lần đi săn.",
-        });
+        await interaction.editReply({ content: "Bạn chỉ có thể dùng tối đa 1 Scout Lens cho mỗi lần đi săn." });
         return;
       }
       if (scoutsWanted > scoutsOwned) {
@@ -152,7 +115,6 @@ export const huntCommand: SlashCommand = {
         return;
       }
 
-      // Scout Lens preview flow: if player selected scouts > 0, show predicted branch and require confirmation.
       if (scoutsWanted > 0) {
         const cloverLuck = cloversWanted * cloverPower;
         const totalLuckForRates = user.luck + cloverLuck;
@@ -210,269 +172,17 @@ export const huntCommand: SlashCommand = {
         return;
       }
 
-      const busyUntil = new Date(now.getTime() + CAPTURE_TIMEOUT_MS);
-      const lockResult = await prisma.user.updateMany({
-        where: {
-          id: user.id,
-          isBusy: false
-        },
-        data: {
-          isBusy: true,
-          busyUntil
-        }
+      await performCoreHunt(interaction, user, now, {
+        trapsWanted,
+        cloversWanted,
+        scoutLensToUse: 0
       });
-
-      if (lockResult.count === 0) {
-        const refreshed = (await prisma.user.findUnique({ where: { id: user.id } })) as any;
-        const refreshedNow = new Date();
-        const tavernLeftMs =
-          refreshed?.tavernUntil && refreshed.tavernUntil > refreshedNow
-            ? refreshed.tavernUntil.getTime() - refreshedNow.getTime()
-            : 0;
-        const busyLeftMs =
-          refreshed?.busyUntil && refreshed.busyUntil > refreshedNow
-            ? refreshed.busyUntil.getTime() - refreshedNow.getTime()
-            : 0;
-
-        if (tavernLeftMs > 0) {
-          await interaction.editReply({
-            content: `Bạn đang nghỉ tại quán trọ trong ${formatDuration(tavernLeftMs)}. Hãy thử lại sau khi nghỉ xong.`,
-          });
-          return;
-        }
-
-        if (busyLeftMs > 0) {
-          await interaction.editReply({
-            content: `Bạn đang bận ngay lúc này (đang đi săn). Còn ${formatDuration(busyLeftMs)}.`,
-          });
-          return;
-        }
-
-        await interaction.editReply({
-          content: "Bạn đang bận ngay lúc này. Vui lòng thử lại sau."
-        });
-        return;
-      }
-
-      shouldReleaseBusy = true;
-      await updateQuestProgress(user.id, "hunt_count", 1);
-      
-      // Apply item effects (buffs, modifiers, risk/reward) for this hunt attempt.
-      const effectsResult = await applyBeforeHuntItemEffects({
-        db: prisma,
-        now,
-        user,
-        scoutLensToUse: scoutsWanted
-      });
-
-      if (effectsResult.shouldStopHunt) {
-        await interaction.editReply({ content: effectsResult.stopMessage ?? "Bạn đã không thể bắt đầu cuộc đi săn này." });
-        return;
-      }
-
-      const effects = effectsResult.ctx;
-
-      const cloverLuck = cloversWanted * cloverPower;
-      const totalLuck = effects.luck + cloverLuck;
-      
-      // Luck reduces "combat" and "fail" to increase "chest" and "catch"
-      const shiftChance = Math.min(20, totalLuck * 0.5);
-      const catchRate = EVENT_RATES.catch + (shiftChance * 0.6);
-      const chestRate = EVENT_RATES.chest + (shiftChance * 0.4);
-      const combatRate = EVENT_RATES.combat - (shiftChance * 0.5);
-      // Fail naturally gets the remaining part if combat/catch/chest don't hit
-
-      const eventRoll = Math.random() * 100;
-
-      const scoutPrefix = (() => {
-        if (!effects.scoutLensActive) return "";
-        if (eventRoll < combatRate) return "🔍 Dự báo: Bạn sẽ gặp trận chiến! ";
-        if (eventRoll < combatRate + chestRate) return "🔍 Dự báo: Bạn sẽ gặp rương kho báu! ";
-        if (eventRoll < combatRate + chestRate + catchRate) return "🔍 Dự báo: Bạn sẽ gặp quái thú hoang dã! ";
-        return "🔍 Dự báo: Khu vực sẽ yên ắng. Có thể bạn sẽ chẳng tìm được gì! ";
-      })();
-
-      if (eventRoll < combatRate) {
-        // Only consume clovers on combat start
-        if (cloversWanted > 0 && userCloverObj) {
-          await prisma.item.update({
-            where: { id: userCloverObj.id },
-            data: { quantity: { decrement: cloversWanted } }
-          });
-        }
-
-        const combat = await handleHunt(user.id, {
-          str: effects.str,
-          agi: effects.agi,
-          luck: effects.luck,
-          playerDamageMultiplier: effects.playerDamageMultiplier,
-          enemyStrengthMultiplier: effects.enemyStrengthMultiplier,
-          topPetBonusMultiplier: effects.topPetBonusMultiplier,
-          goldMultiplier: effects.goldMultiplier,
-          expMultiplier: effects.expMultiplier,
-        });
-        if (typeof combat === "string") {
-          await interaction.editReply({ content: combat });
-          return;
-        }
-
-        const log = combat.battleLogs.join("\n");
-        const embed = new EmbedBuilder()
-          .setColor(combat.isWin ? 0x57f287 : 0xed4245)
-          .setAuthor({ name: "Báo cáo chiến đấu", iconURL: interaction.user.displayAvatarURL() })
-          .setTitle(combat.isWin ? `⚔️ Chiến thắng trước ${combat.enemyName}` : `💀 Thất bại trước ${combat.enemyName}`)
-          .setDescription(scoutPrefix ? `${scoutPrefix}\n\n${log.length > 2000 ? log.substring(0, 1997) + "..." : log}` : (log.length > 2000 ? log.substring(0, 1997) + "..." : log))
-          .addFields(
-            {
-              name: "🎁 Phần thưởng",
-              value: combat.isWin
-                ? `XP: \`+${combat.expGained}\` | Vàng: \`+${combat.goldGained}\``
-                : "Không nhận được phần thưởng.",
-              inline: true
-            },
-            {
-              name: "🩺 Trạng thái cuối cùng",
-              value:
-                buildHpBar(combat.finalHp, user.maxHp) +
-                (combat.hospitalUntil
-                  ? `\n🏥 Bệnh viện: \`${formatDuration(combat.hospitalUntil.getTime() - now.getTime())}\``
-                  : ""),
-              inline: true
-            }
-          )
-          .setFooter({ text: randomRpgFooter() });
-
-        await interaction.editReply({ embeds: [embed] });
-        return;
-      }
-
-      if (eventRoll < combatRate + chestRate) {
-        const token = createEncounterToken();
-
-        await prisma.$transaction(async (tx) => {
-          await tx.user.update({
-            where: { id: user.id },
-            data: { lastHunt: now, busyUntil }
-          });
-
-          if (cloversWanted > 0 && userCloverObj) {
-            await tx.item.update({
-              where: { id: userCloverObj.id },
-              data: { quantity: { decrement: cloversWanted } }
-            });
-          }
-        });
-
-        const embed = new EmbedBuilder()
-          .setColor(0xe67e22)
-          .setTitle("Phát hiện Rương Kho Báu!")
-          .setDescription(`${scoutPrefix}Một chiếc rương bí ẩn xuất hiện trước mặt bạn. Bạn muốn mở thế nào?`);
-
-        await interaction.editReply({
-          embeds: [embed],
-          components: [buildChestButtons(token)]
-        });
-
-        const message = await interaction.fetchReply();
-        shouldReleaseBusy = false;
-
-        startPendingChest(token, user.id, effects.goldMultiplier, effects.str, effects.agi, async () => {
-          try {
-            await prisma.user.update({
-              where: { id: user.id, isBusy: true },
-              data: { isBusy: false, busyUntil: null }
-            });
-          } catch (e) {}
-
-          try {
-            await message.edit({ components: [buildChestButtons(token, true)] });
-          } catch (e) {}
-        });
-
-        return;
-      }
-
-      if (eventRoll < combatRate + chestRate + catchRate) {
-        const luckBuff = cloversWanted * cloverPower;
-        const beastLuck = effects.luck + luckBuff + effects.beastBaitLuckBonus;
-        const beast = createWildBeast(user.level, beastLuck);
-        const token = createEncounterToken();
-
-        await prisma.$transaction(async (tx) => {
-          await tx.user.update({
-            where: { id: user.id },
-            data: { lastHunt: now, busyUntil }
-          });
-
-          if (cloversWanted > 0 && userCloverObj) {
-            await tx.item.update({
-              where: { id: userCloverObj.id },
-              data: { quantity: { decrement: cloversWanted } }
-            });
-          }
-        });
-
-        const embed = new EmbedBuilder()
-          .setColor(RARITY_COLORS[beast.rarity as Rarity])
-        .setTitle(`${RARITY_BANNER[beast.rarity as Rarity]} Quái thú hoang dã!`)
-        .setDescription(`${scoutPrefix}**${beast.name}** hoang dã xuất hiện từ bóng tối!`)
-          .addFields(
-            { name: "Độ hiếm", value: RARITY_BADGE[beast.rarity as Rarity], inline: true },
-            { name: "Sức mạnh", value: `\`${beast.power}\``, inline: true },
-            { name: "Khung thời gian", value: "Hãy hành động trong 30 giây.", inline: true }
-          );
-
-        await interaction.editReply({
-          embeds: [embed],
-          components: [buildBeastButtons(token)]
-        });
-
-        const message = await interaction.fetchReply();
-        shouldReleaseBusy = false;
-
-        startPendingEncounter(token, user.id, beast, trapsWanted, Math.floor(trapsWanted * trapPower), effects.luck, async () => {
-          try {
-            await prisma.user.update({
-              where: { id: user.id },
-              data: { isBusy: false, busyUntil: null }
-            });
-          } catch (e) {}
-
-          try {
-            await message.edit({ components: [buildBeastButtons(token, true)] });
-          } catch (e) {}
-        });
-
-        return;
-      }
-
-      await prisma.user.update({
-        where: { id: user.id },
-        data: { lastHunt: now }
-      });
-
-      const embed = new EmbedBuilder()
-        .setColor(0x95a5a6)
-        .setTitle("Không tìm thấy gì")
-        .setDescription(`${scoutPrefix}Khu vực yên ắng. Lần này bạn chẳng tìm được gì.`)
-        .setFooter({ text: randomRpgFooter() });
-
-      await interaction.editReply({ embeds: [embed] });
     } catch (error) {
       console.error("hunt command failed", error);
       if (!interaction.deferred && !interaction.replied) {
         await interaction.reply({ content: "Đi săn thất bại. Thử lại sau một chút.", ephemeral: true });
       } else {
         await interaction.editReply({ content: "Đi săn thất bại. Thử lại sau một chút." });
-      }
-    } finally {
-      if (shouldReleaseBusy) {
-        try {
-          await prisma.user.update({
-            where: { id: interaction.user.id },
-            data: { isBusy: false, busyUntil: null }
-          });
-        } catch (error) {}
       }
     }
   }
@@ -488,7 +198,6 @@ async function executeHuntAfterScoutConfirm(params: {
 }): Promise<void> {
   const { interaction, userId, trapsWanted, cloversWanted, scoutLensToUse, forcedEventRoll } = params;
 
-  let shouldReleaseBusy = false;
   try {
     if (!interaction.deferred && !interaction.replied) {
       await interaction.deferReply();
@@ -502,45 +211,17 @@ async function executeHuntAfterScoutConfirm(params: {
       return;
     }
 
-    if (user.hospitalUntil && user.hospitalUntil > now) {
-      await interaction.editReply({
-        content: `Bạn đang ở bệnh viện trong ${formatDuration(user.hospitalUntil.getTime() - now.getTime())}.`,
-      });
-      return;
-    }
-
-    if (user.isBusy) {
-      const tavernLeftMs =
-        user.tavernUntil && user.tavernUntil > now ? user.tavernUntil.getTime() - now.getTime() : 0;
-      const busyLeftMs = user.busyUntil && user.busyUntil > now ? user.busyUntil.getTime() - now.getTime() : 0;
-
-      if (tavernLeftMs > 0) {
-        await interaction.editReply({
-          content: `Bạn đang nghỉ tại quán trọ trong ${formatDuration(tavernLeftMs)}. Hãy thử lại sau khi nghỉ xong.`,
-        });
-        return;
-      }
-
-      if (busyLeftMs > 0) {
-        await interaction.editReply({
-          content: `Bạn đang bận ngay lúc này (đang đi săn). Còn ${formatDuration(busyLeftMs)}.`,
-        });
-        return;
-      }
-
-      await interaction.editReply({
-        content: "Bạn đang bận ngay lúc này. Vui lòng thử lại sau.",
-      });
+    const statusErr = checkUserStatusErrors(user, now);
+    if (statusErr) {
+      await interaction.editReply({ content: statusErr });
       return;
     }
 
     const userTrapObj = user.inventory.find((i: any) => i.type === ItemType.TRAP);
     const trapsOwned = userTrapObj?.quantity ?? 0;
-    const trapPower = userTrapObj?.power ?? 1;
 
     const userCloverObj = user.inventory.find((i: any) => i.type === ItemType.LUCK_BUFF);
     const cloversOwned = userCloverObj?.quantity ?? 0;
-    const cloverPower = userCloverObj?.power ?? 1;
 
     if (trapsWanted > trapsOwned) {
       await interaction.editReply({ content: `Bạn không đủ Hunter Traps! (Bạn có ${trapsOwned})` });
@@ -558,238 +239,18 @@ async function executeHuntAfterScoutConfirm(params: {
       return;
     }
 
-    const busyUntil = new Date(now.getTime() + CAPTURE_TIMEOUT_MS);
-    const lockResult = await prisma.user.updateMany({
-      where: { id: user.id, isBusy: false },
-      data: { isBusy: true, busyUntil }
+    await performCoreHunt(interaction, user, now, {
+      trapsWanted,
+      cloversWanted,
+      scoutLensToUse,
+      forcedEventRoll
     });
-
-    if (lockResult.count === 0) {
-      await interaction.editReply({ content: "Bạn đang bận ngay lúc này. Vui lòng thử lại sau." });
-      return;
-    }
-
-    shouldReleaseBusy = true;
-    await updateQuestProgress(user.id, "hunt_count", 1);
-
-    // Apply item effects (buffs, modifiers, risk/reward) for this hunt attempt.
-    const effectsResult = await applyBeforeHuntItemEffects({
-      db: prisma,
-      now,
-      user,
-      scoutLensToUse
-    });
-
-    if (effectsResult.shouldStopHunt) {
-      await interaction.editReply({ content: effectsResult.stopMessage ?? "Bạn đã không thể bắt đầu cuộc đi săn này." });
-      return;
-    }
-
-    const effects = effectsResult.ctx;
-    const cloverLuck = cloversWanted * cloverPower;
-    const totalLuck = effects.luck + cloverLuck;
-
-    const shiftChance = Math.min(20, totalLuck * 0.5);
-    const catchRate = EVENT_RATES.catch + (shiftChance * 0.6);
-    const chestRate = EVENT_RATES.chest + (shiftChance * 0.4);
-    const combatRate = EVENT_RATES.combat - (shiftChance * 0.5);
-
-    const eventRoll = forcedEventRoll;
-
-    const scoutPrefix = (() => {
-      if (!effects.scoutLensActive) return "";
-      if (eventRoll < combatRate) return "🔍 Dự báo: Bạn sẽ gặp trận chiến! ";
-      if (eventRoll < combatRate + chestRate) return "🔍 Dự báo: Bạn sẽ gặp rương kho báu! ";
-      if (eventRoll < combatRate + chestRate + catchRate) return "🔍 Dự báo: Bạn sẽ gặp quái thú hoang dã! ";
-      return "🔍 Dự báo: Khu vực sẽ yên ắng. Có thể bạn sẽ chẳng tìm được gì! ";
-    })();
-
-    if (eventRoll < combatRate) {
-      // Only consume clovers on combat start
-      if (cloversWanted > 0 && userCloverObj) {
-        await prisma.item.update({
-          where: { id: userCloverObj.id },
-          data: { quantity: { decrement: cloversWanted } }
-        });
-      }
-
-      const combat = await handleHunt(user.id, {
-        str: effects.str,
-        agi: effects.agi,
-        luck: effects.luck,
-        playerDamageMultiplier: effects.playerDamageMultiplier,
-        enemyStrengthMultiplier: effects.enemyStrengthMultiplier,
-        topPetBonusMultiplier: effects.topPetBonusMultiplier,
-        goldMultiplier: effects.goldMultiplier,
-        expMultiplier: effects.expMultiplier
-      });
-
-      if (typeof combat === "string") {
-        await interaction.editReply({ content: combat });
-        return;
-      }
-
-      const log = combat.battleLogs.join("\n");
-      const embed = new EmbedBuilder()
-        .setColor(combat.isWin ? 0x57f287 : 0xed4245)
-        .setAuthor({ name: "Báo cáo chiến đấu", iconURL: interaction.user.displayAvatarURL() })
-        .setTitle(combat.isWin ? `⚔️ Chiến thắng trước ${combat.enemyName}` : `💀 Thất bại trước ${combat.enemyName}`)
-        .setDescription(
-          scoutPrefix
-            ? `${scoutPrefix}\n\n${log.length > 2000 ? log.substring(0, 1997) + "..." : log}`
-            : log.length > 2000
-              ? log.substring(0, 1997) + "..."
-              : log
-        )
-        .addFields(
-          {
-            name: "🎁 Phần thưởng",
-            value: combat.isWin ? `XP: \`+${combat.expGained}\` | Vàng: \`+${combat.goldGained}\`` : "Không nhận được phần thưởng.",
-            inline: true
-          },
-          {
-            name: "🩺 Trạng thái cuối cùng",
-            value:
-              buildHpBar(combat.finalHp, user.maxHp) +
-              (combat.hospitalUntil ? `\n🏥 Bệnh viện: \`${formatDuration(combat.hospitalUntil.getTime() - now.getTime())}\`` : ""),
-            inline: true
-          }
-        )
-        .setFooter({ text: randomRpgFooter() });
-
-      await interaction.editReply({ embeds: [embed] });
-      return;
-    }
-
-    // Chest
-    if (eventRoll < combatRate + chestRate) {
-      const token = createEncounterToken();
-
-      await prisma.$transaction(async (tx) => {
-        await tx.user.update({
-          where: { id: user.id },
-          data: { lastHunt: now, busyUntil }
-        });
-
-        if (cloversWanted > 0 && userCloverObj) {
-          await tx.item.update({
-            where: { id: userCloverObj.id },
-            data: { quantity: { decrement: cloversWanted } }
-          });
-        }
-      });
-
-      const embed = new EmbedBuilder()
-        .setColor(0xe67e22)
-        .setTitle("Phát hiện Rương Kho Báu!")
-        .setDescription(`${scoutPrefix}Một chiếc rương bí ẩn xuất hiện trước mặt bạn. Bạn muốn mở thế nào?`);
-
-      await interaction.editReply({
-        embeds: [embed],
-        components: [buildChestButtons(token)]
-      });
-
-      const message = await interaction.fetchReply();
-      shouldReleaseBusy = false;
-
-      startPendingChest(token, user.id, effects.goldMultiplier, effects.str, effects.agi, async () => {
-        try {
-          await prisma.user.update({
-            where: { id: user.id, isBusy: true },
-            data: { isBusy: false, busyUntil: null }
-          });
-        } catch (e) {}
-
-        try {
-          await message.edit({ components: [buildChestButtons(token, true)] });
-        } catch (e) {}
-      });
-
-      return;
-    }
-
-    // Catch / Beast encounter
-    if (eventRoll < combatRate + chestRate + catchRate) {
-      const luckBuff = cloversWanted * cloverPower;
-      const beast = createWildBeast(user.level, effects.luck + luckBuff + effects.beastBaitLuckBonus);
-      const token = createEncounterToken();
-
-      await prisma.$transaction(async (tx) => {
-        await tx.user.update({
-          where: { id: user.id },
-          data: { lastHunt: now, busyUntil }
-        });
-
-        if (cloversWanted > 0 && userCloverObj) {
-          await tx.item.update({
-            where: { id: userCloverObj.id },
-            data: { quantity: { decrement: cloversWanted } }
-          });
-        }
-      });
-
-      const embed = new EmbedBuilder()
-        .setColor(RARITY_COLORS[beast.rarity as Rarity])
-        .setTitle(`${RARITY_BANNER[beast.rarity as Rarity]} Quái thú hoang dã!`)
-        .setDescription(`${scoutPrefix}**${beast.name}** hoang dã xuất hiện từ bóng tối!`)
-        .addFields(
-          { name: "Độ hiếm", value: RARITY_BADGE[beast.rarity as Rarity], inline: true },
-          { name: "Sức mạnh", value: `\`${beast.power}\``, inline: true },
-          { name: "Khung thời gian", value: "Hãy hành động trong 30 giây.", inline: true }
-        );
-
-      await interaction.editReply({
-        embeds: [embed],
-        components: [buildBeastButtons(token)]
-      });
-
-      const message = await interaction.fetchReply();
-      shouldReleaseBusy = false;
-
-      startPendingEncounter(token, user.id, beast, trapsWanted, Math.floor(trapsWanted * trapPower), effects.luck, async () => {
-        try {
-          await prisma.user.update({
-            where: { id: user.id },
-            data: { isBusy: false, busyUntil: null }
-          });
-        } catch (e) {}
-
-        try {
-          await message.edit({ components: [buildBeastButtons(token, true)] });
-        } catch (e) {}
-      });
-
-      return;
-    }
-
-    // Nothing found
-    await prisma.user.update({
-      where: { id: user.id },
-      data: { lastHunt: now }
-    });
-
-    const embed = new EmbedBuilder()
-      .setColor(0x95a5a6)
-      .setTitle("Không tìm thấy gì")
-      .setDescription(`${scoutPrefix}Khu vực yên ắng. Lần này bạn chẳng tìm được gì.`)
-      .setFooter({ text: randomRpgFooter() });
-
-    await interaction.editReply({ embeds: [embed] });
   } catch (error) {
     console.error("hunt confirm failed", error);
     if (!interaction.deferred && !interaction.replied) {
       await interaction.reply({ content: "Đi săn thất bại. Thử lại sau một chút.", ephemeral: true });
     } else {
       await interaction.editReply({ content: "Đi săn thất bại. Thử lại sau một chút." });
-    }
-  } finally {
-    if (shouldReleaseBusy) {
-      try {
-        await prisma.user.update({
-          where: { id: userId },
-          data: { isBusy: false, busyUntil: null }
-        });
-      } catch (error) {}
     }
   }
 }
@@ -805,7 +266,6 @@ export async function handleButtonInteraction(interaction: ButtonInteraction): P
       return true;
     }
 
-    // Cancel: tiêu hao Scout Lens theo đúng lựa chọn của người chơi.
     const toConsume = Math.max(0, preview.scoutLensToUse ?? 0);
     if (toConsume > 0) {
       try {
@@ -947,8 +407,8 @@ export async function handleButtonInteraction(interaction: ButtonInteraction): P
           embed.setColor(0x2ecc71).setTitle("Vô hiệu hóa rương thành công!").setDescription(`Bạn nhẹ nhàng mở rương và tìm thấy **${trapWin} Hunter Traps**!`);
         } else {
           const damage = randomInt(15, 30);
-          const currentHp = Math.max(1, user.hp - damage);
-          await prisma.user.update({ where: { id: user.id }, data: { isBusy: false, busyUntil: null, hp: currentHp, lastHpUpdatedAt: new Date() } });
+          const currentHp = Math.max(1, user.currentHp - damage);
+          await prisma.user.update({ where: { id: user.id }, data: { isBusy: false, busyUntil: null, currentHp: currentHp, lastHpUpdatedAt: new Date() } });
           embed.setColor(0xe74c3c).setTitle("Bẫy kích hoạt!").setDescription(`Bạn không vô hiệu hóa được cái bẫy. Bạn nhận **${damage}** sát thương!`);
         }
       }
@@ -962,14 +422,13 @@ export async function handleButtonInteraction(interaction: ButtonInteraction): P
     return true;
   }
 
-  // Beast encounters
-  const preview = peekPendingEncounter(token);
-  if (!preview) {
+  const previewEncounter = peekPendingEncounter(token);
+  if (!previewEncounter) {
     await interaction.reply({ content: "Cuộc chạm trán đã hết hạn.", ephemeral: true });
     return true;
   }
 
-  if (preview.userId !== interaction.user.id) {
+  if (previewEncounter.userId !== interaction.user.id) {
     await interaction.reply({ content: "Cuộc chạm trán này không thuộc về bạn.", ephemeral: true });
     return true;
   }
