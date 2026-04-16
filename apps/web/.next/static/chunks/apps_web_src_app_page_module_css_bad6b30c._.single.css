@@ -1,0 +1,80 @@
+/* [project]/apps/web/src/app/page.module.css [app-client] (css) */
+.page-module__YnyroG__gameLayout {
+  background: var(--bg-primary);
+  height: 100vh;
+  color: var(--text);
+  flex-direction: column;
+  display: flex;
+  overflow: hidden;
+}
+
+.page-module__YnyroG__mainArea {
+  flex: 1;
+  display: flex;
+  overflow: hidden;
+}
+
+.page-module__YnyroG__content {
+  flex-direction: column;
+  flex: 1;
+  gap: 1rem;
+  padding: 1rem;
+  display: flex;
+  overflow-y: auto;
+}
+
+.page-module__YnyroG__loginScreen {
+  background: var(--bg-primary);
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  display: flex;
+}
+
+.page-module__YnyroG__loginCard {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  text-align: center;
+  border-radius: 16px;
+  min-width: 320px;
+  padding: 3rem;
+}
+
+.page-module__YnyroG__loginTitle {
+  background: linear-gradient(135deg, var(--accent-gold), var(--accent-purple));
+  -webkit-text-fill-color: transparent;
+  -webkit-background-clip: text;
+  background-clip: text;
+  margin-bottom: .5rem;
+  font-family: Rajdhani, sans-serif;
+  font-size: 2.5rem;
+  font-weight: 700;
+}
+
+.page-module__YnyroG__loginSubtitle {
+  color: var(--text-dim);
+  margin-bottom: 2rem;
+}
+
+.page-module__YnyroG__loginInput {
+  background: var(--bg-primary);
+  border: 1px solid var(--border);
+  width: 100%;
+  color: var(--text);
+  text-align: center;
+  border-radius: 8px;
+  outline: none;
+  padding: .875rem 1rem;
+  font-size: 1rem;
+  transition: border-color .15s;
+}
+
+.page-module__YnyroG__loginInput:focus {
+  border-color: var(--accent-gold);
+}
+
+.page-module__YnyroG__loginInput::placeholder {
+  color: var(--text-dim);
+}
+
+/*# sourceMappingURL=apps_web_src_app_page_module_css_bad6b30c._.single.css.map*/

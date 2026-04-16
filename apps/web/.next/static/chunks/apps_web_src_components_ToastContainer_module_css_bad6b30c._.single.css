@@ -1,0 +1,60 @@
+/* [project]/apps/web/src/components/ToastContainer.module.css [app-client] (css) */
+.ToastContainer-module__Z1OQKq__container {
+  z-index: 1000;
+  pointer-events: none;
+  flex-direction: column;
+  gap: .5rem;
+  display: flex;
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+}
+
+.ToastContainer-module__Z1OQKq__toast {
+  pointer-events: auto;
+  border-radius: 8px;
+  max-width: 280px;
+  padding: .75rem 1rem;
+  font-size: .85rem;
+  font-weight: 500;
+  animation: .2s ease-out ToastContainer-module__Z1OQKq__slideIn;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, .3);
+}
+
+@keyframes ToastContainer-module__Z1OQKq__slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.ToastContainer-module__Z1OQKq__toast.ToastContainer-module__Z1OQKq__success {
+  border: 1px solid var(--hp-green);
+  color: var(--hp-green);
+  background: rgba(34, 197, 94, .15);
+}
+
+.ToastContainer-module__Z1OQKq__toast.ToastContainer-module__Z1OQKq__error {
+  border: 1px solid var(--hp-red);
+  color: var(--hp-red);
+  background: rgba(239, 68, 68, .15);
+}
+
+.ToastContainer-module__Z1OQKq__toast.ToastContainer-module__Z1OQKq__info {
+  border: 1px solid var(--accent-purple);
+  color: var(--accent-purple);
+  background: rgba(155, 109, 255, .15);
+}
+
+.ToastContainer-module__Z1OQKq__toast.ToastContainer-module__Z1OQKq__loot {
+  border: 1px solid var(--accent-gold);
+  color: var(--accent-gold);
+  background: rgba(240, 192, 64, .15);
+}
+
+/*# sourceMappingURL=apps_web_src_components_ToastContainer_module_css_bad6b30c._.single.css.map*/

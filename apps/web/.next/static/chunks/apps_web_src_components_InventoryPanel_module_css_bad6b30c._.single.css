@@ -1,0 +1,356 @@
+/* [project]/apps/web/src/components/InventoryPanel.module.css [app-client] (css) */
+.InventoryPanel-module__a8QOVW__panel {
+  flex-direction: column;
+  gap: 1rem;
+  display: flex;
+  position: relative;
+}
+
+.InventoryPanel-module__a8QOVW__toast {
+  z-index: 1000;
+  border-radius: 8px;
+  padding: .75rem 1rem;
+  font-size: .9rem;
+  font-weight: 500;
+  animation: .2s ease-out InventoryPanel-module__a8QOVW__slideIn;
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, .3);
+}
+
+.InventoryPanel-module__a8QOVW__toast.InventoryPanel-module__a8QOVW__success {
+  border: 1px solid var(--hp-green);
+  color: var(--hp-green);
+  background: rgba(34, 197, 94, .15);
+}
+
+.InventoryPanel-module__a8QOVW__toast.InventoryPanel-module__a8QOVW__error {
+  border: 1px solid var(--hp-red);
+  color: var(--hp-red);
+  background: rgba(239, 68, 68, .15);
+}
+
+@keyframes InventoryPanel-module__a8QOVW__slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.InventoryPanel-module__a8QOVW__title {
+  margin: 0;
+  font-family: Rajdhani, sans-serif;
+  font-size: 1.75rem;
+  font-weight: 700;
+}
+
+.InventoryPanel-module__a8QOVW__tabs {
+  border-bottom: 1px solid var(--border);
+  gap: .5rem;
+  padding-bottom: .5rem;
+  display: flex;
+}
+
+.InventoryPanel-module__a8QOVW__tab {
+  color: var(--text-dim);
+  cursor: pointer;
+  background: none;
+  border: none;
+  border-radius: 6px;
+  padding: .5rem 1rem;
+  font-size: .9rem;
+  transition: all .15s;
+}
+
+.InventoryPanel-module__a8QOVW__tab:hover {
+  color: var(--text);
+  background: var(--bg-card-hover);
+}
+
+.InventoryPanel-module__a8QOVW__tab.InventoryPanel-module__a8QOVW__activeTab {
+  color: var(--accent-gold);
+  background: rgba(240, 192, 64, .1);
+}
+
+.InventoryPanel-module__a8QOVW__filters {
+  flex-wrap: wrap;
+  gap: .5rem;
+  display: flex;
+}
+
+.InventoryPanel-module__a8QOVW__filterBtn {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  cursor: pointer;
+  border-radius: 20px;
+  padding: .45rem .85rem;
+  font-size: .8rem;
+  transition: all .15s;
+}
+
+.InventoryPanel-module__a8QOVW__filterBtn:hover {
+  border-color: var(--text-dim);
+  color: var(--text);
+}
+
+.InventoryPanel-module__a8QOVW__filterBtn.InventoryPanel-module__a8QOVW__activeFilter {
+  background: var(--accent-gold);
+  border-color: var(--accent-gold);
+  color: #000;
+}
+
+.InventoryPanel-module__a8QOVW__grid {
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: .85rem;
+  display: grid;
+}
+
+.InventoryPanel-module__a8QOVW__empty {
+  text-align: center;
+  color: var(--text-dim);
+  grid-column: 1 / -1;
+  padding: 2rem;
+  font-size: .9rem;
+}
+
+.InventoryPanel-module__a8QOVW__itemCard {
+  background: var(--bg-card);
+  cursor: default;
+  border: 2px solid #444;
+  border-radius: 10px;
+  flex-direction: column;
+  align-items: center;
+  gap: .35rem;
+  padding: .85rem .75rem;
+  transition: all .15s;
+  display: flex;
+  position: relative;
+}
+
+.InventoryPanel-module__a8QOVW__itemCard:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, .4);
+}
+
+.InventoryPanel-module__a8QOVW__itemCard.InventoryPanel-module__a8QOVW__equipped {
+  background: rgba(240, 192, 64, .05);
+}
+
+.InventoryPanel-module__a8QOVW__itemIcon {
+  font-size: 2.2rem;
+  line-height: 1;
+}
+
+.InventoryPanel-module__a8QOVW__itemName {
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  width: 100%;
+  max-width: 100%;
+  margin: 0;
+  font-size: .8rem;
+  font-weight: 600;
+  display: block;
+  overflow: hidden;
+}
+
+.InventoryPanel-module__a8QOVW__itemRarity {
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  margin: 0;
+  font-size: .65rem;
+}
+
+.InventoryPanel-module__a8QOVW__qtyBadge {
+  background: var(--bg-primary);
+  color: var(--text);
+  border-radius: 4px;
+  padding: 2px 5px;
+  font-family: JetBrains Mono, monospace;
+  font-size: .65rem;
+  position: absolute;
+  top: 5px;
+  left: 5px;
+}
+
+.InventoryPanel-module__a8QOVW__upgradeBadge {
+  background: var(--accent-gold);
+  color: #000;
+  border-radius: 4px;
+  padding: 2px 5px;
+  font-size: .65rem;
+  font-weight: 700;
+  position: absolute;
+  top: 5px;
+  right: 5px;
+}
+
+.InventoryPanel-module__a8QOVW__equippedLabel {
+  color: var(--hp-green);
+  font-size: .7rem;
+}
+
+.InventoryPanel-module__a8QOVW__itemActions {
+  gap: .3rem;
+  width: 100%;
+  margin-top: .3rem;
+  display: flex;
+}
+
+.InventoryPanel-module__a8QOVW__useBtn, .InventoryPanel-module__a8QOVW__sellBtn {
+  cursor: pointer;
+  border: none;
+  border-radius: 5px;
+  flex: 1;
+  padding: .4rem .3rem;
+  font-size: .72rem;
+  font-weight: 600;
+  transition: all .1s;
+}
+
+.InventoryPanel-module__a8QOVW__useBtn {
+  background: var(--hp-green);
+  color: #000;
+}
+
+.InventoryPanel-module__a8QOVW__useBtn:hover:not(:disabled) {
+  background: #16a34a;
+}
+
+.InventoryPanel-module__a8QOVW__useBtn:disabled {
+  opacity: .5;
+  cursor: not-allowed;
+}
+
+.InventoryPanel-module__a8QOVW__sellBtn {
+  background: var(--bg-primary);
+  color: var(--text-dim);
+  border: 1px solid var(--border);
+}
+
+.InventoryPanel-module__a8QOVW__sellBtn:hover:not(:disabled) {
+  border-color: var(--accent-gold);
+  color: var(--accent-gold);
+}
+
+.InventoryPanel-module__a8QOVW__sellBtn:disabled {
+  opacity: .5;
+  cursor: not-allowed;
+}
+
+.InventoryPanel-module__a8QOVW__itemTooltip {
+  border: 1px solid var(--accent-gold);
+  z-index: 200;
+  background: #0d0e1a;
+  border-radius: 10px;
+  min-width: 180px;
+  max-width: 240px;
+  padding: .85rem;
+  display: none;
+  position: absolute;
+  bottom: calc(100% + 10px);
+  left: 50%;
+  transform: translateX(-50%);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, .6);
+}
+
+.InventoryPanel-module__a8QOVW__itemCard:hover .InventoryPanel-module__a8QOVW__itemTooltip {
+  animation: .15s ease-out InventoryPanel-module__a8QOVW__tooltipIn;
+  display: block;
+}
+
+@keyframes InventoryPanel-module__a8QOVW__tooltipIn {
+  from {
+    opacity: 0;
+    transform: translateX(-50%)translateY(4px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(-50%)translateY(0);
+  }
+}
+
+.InventoryPanel-module__a8QOVW__tooltipHeader {
+  border-bottom: 1px solid var(--border);
+  margin-bottom: .5rem;
+  padding-bottom: .5rem;
+}
+
+.InventoryPanel-module__a8QOVW__tooltipName {
+  color: var(--text);
+  margin: 0 0 .2rem;
+  font-size: .85rem;
+  font-weight: 700;
+}
+
+.InventoryPanel-module__a8QOVW__tooltipRarity {
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  margin: 0;
+  font-size: .65rem;
+}
+
+.InventoryPanel-module__a8QOVW__tooltipRow {
+  justify-content: space-between;
+  align-items: center;
+  gap: 1.5rem;
+  padding: .25rem 0;
+  display: flex;
+}
+
+.InventoryPanel-module__a8QOVW__tooltipRow span:first-child {
+  color: var(--text-dim);
+  font-size: .78rem;
+}
+
+.InventoryPanel-module__a8QOVW__tooltipRow span:last-child {
+  color: var(--text);
+  font-family: JetBrains Mono, monospace;
+  font-size: .82rem;
+  font-weight: 600;
+}
+
+.InventoryPanel-module__a8QOVW__tooltipDivider {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: .4rem 0;
+}
+
+.InventoryPanel-module__a8QOVW__tooltipFooter {
+  border-top: 1px solid var(--border);
+  flex-direction: column;
+  gap: .2rem;
+  margin-top: .5rem;
+  padding-top: .5rem;
+  display: flex;
+}
+
+.InventoryPanel-module__a8QOVW__tooltipSet {
+  color: var(--accent-purple);
+  text-align: center;
+  font-size: .72rem;
+  font-weight: 600;
+}
+
+.InventoryPanel-module__a8QOVW__tooltipUpgrade {
+  color: var(--accent-gold);
+  text-align: center;
+  font-size: .68rem;
+}
+
+.InventoryPanel-module__a8QOVW__tooltipHint {
+  color: var(--text-dim);
+  text-align: center;
+  font-size: .62rem;
+  font-style: italic;
+}
+
+/*# sourceMappingURL=apps_web_src_components_InventoryPanel_module_css_bad6b30c._.single.css.map*/

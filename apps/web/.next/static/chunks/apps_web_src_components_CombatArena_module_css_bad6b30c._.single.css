@@ -1,0 +1,388 @@
+/* [project]/apps/web/src/components/CombatArena.module.css [app-client] (css) */
+.CombatArena-module__TJhdva__arena {
+  flex-direction: column;
+  flex: 1;
+  gap: 1rem;
+  display: flex;
+  position: relative;
+}
+
+.CombatArena-module__TJhdva__stage {
+  border: 1px solid var(--border);
+  background: linear-gradient(#0a0b10 0%, #12141f 100%);
+  border-radius: 16px;
+  justify-content: space-between;
+  align-items: center;
+  min-height: 280px;
+  padding: 2rem 3rem;
+  display: flex;
+  position: relative;
+  overflow: hidden;
+}
+
+.CombatArena-module__TJhdva__stage:before {
+  content: "";
+  pointer-events: none;
+  background: radial-gradient(at bottom, rgba(99, 102, 241, .1) 0%, rgba(0, 0, 0, 0) 70%);
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+}
+
+.CombatArena-module__TJhdva__combatant {
+  z-index: 1;
+  border-radius: 16px;
+  flex-direction: column;
+  align-items: center;
+  gap: .5rem;
+  min-width: 140px;
+  padding: 1.5rem;
+  transition: all .2s;
+  display: flex;
+  position: relative;
+}
+
+.CombatArena-module__TJhdva__combatant.CombatArena-module__TJhdva__activeTurn {
+  box-shadow: 0 0 20px rgba(240, 192, 64, .3);
+}
+
+.CombatArena-module__TJhdva__combatant.CombatArena-module__TJhdva__shake {
+  animation: .15s ease-in-out CombatArena-module__TJhdva__shake;
+}
+
+@keyframes CombatArena-module__TJhdva__shake {
+  0%, 100% {
+    transform: translateX(0);
+  }
+
+  25% {
+    transform: translateX(-5px);
+  }
+
+  75% {
+    transform: translateX(5px);
+  }
+}
+
+.CombatArena-module__TJhdva__avatar {
+  background: var(--bg-card);
+  border: 2px solid var(--border);
+  border-radius: 50%;
+  justify-content: center;
+  align-items: center;
+  width: 80px;
+  height: 80px;
+  font-size: 2.5rem;
+  display: flex;
+  position: relative;
+}
+
+.CombatArena-module__TJhdva__avatarEmoji {
+  line-height: 1;
+}
+
+.CombatArena-module__TJhdva__petMini {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  justify-content: center;
+  align-items: center;
+  width: 22px;
+  height: 22px;
+  font-size: .9rem;
+  display: flex;
+  position: absolute;
+  bottom: -4px;
+  right: -4px;
+}
+
+.CombatArena-module__TJhdva__combatantName {
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 120px;
+  font-size: .9rem;
+  font-weight: 600;
+  overflow: hidden;
+}
+
+.CombatArena-module__TJhdva__hpBarOuter {
+  border: 1px solid var(--border);
+  background: rgba(0, 0, 0, .5);
+  border-radius: 5px;
+  width: 100%;
+  max-width: 140px;
+  height: 10px;
+  overflow: hidden;
+}
+
+.CombatArena-module__TJhdva__hpBarInner {
+  border-radius: 5px;
+  height: 100%;
+  transition: width .3s ease-out, background .3s;
+}
+
+.CombatArena-module__TJhdva__hpText {
+  color: var(--text-dim);
+  font-family: JetBrains Mono, monospace;
+  font-size: .7rem;
+}
+
+.CombatArena-module__TJhdva__vsIndicator {
+  z-index: 1;
+  justify-content: center;
+  align-items: center;
+  min-width: 60px;
+  display: flex;
+  position: relative;
+}
+
+.CombatArena-module__TJhdva__vsText {
+  color: var(--text-dim);
+  font-family: Rajdhani, sans-serif;
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.CombatArena-module__TJhdva__turnIndicator {
+  font-size: 2rem;
+  animation: 1s ease-in-out infinite CombatArena-module__TJhdva__pulse;
+}
+
+@keyframes CombatArena-module__TJhdva__pulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  50% {
+    opacity: .8;
+    transform: scale(1.2);
+  }
+}
+
+.CombatArena-module__TJhdva__resultBadge {
+  border-radius: 4px;
+  padding: .25rem .75rem;
+  font-family: Rajdhani, sans-serif;
+  font-size: 1.2rem;
+  font-weight: 700;
+}
+
+.CombatArena-module__TJhdva__resultBadge.CombatArena-module__TJhdva__win {
+  background: var(--hp-green);
+  color: #000;
+}
+
+.CombatArena-module__TJhdva__resultBadge.CombatArena-module__TJhdva__lose {
+  background: var(--hp-red);
+  color: #fff;
+}
+
+.CombatArena-module__TJhdva__damageLayer {
+  pointer-events: none;
+  z-index: 10;
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+}
+
+.CombatArena-module__TJhdva__damageNumber {
+  text-shadow: 0 2px 4px rgba(0, 0, 0, .8);
+  pointer-events: none;
+  white-space: nowrap;
+  font-family: JetBrains Mono, monospace;
+  font-size: 1.5rem;
+  font-weight: 700;
+  animation: .7s ease-out forwards CombatArena-module__TJhdva__floatUp;
+  position: absolute;
+  transform: translateX(-50%);
+}
+
+.CombatArena-module__TJhdva__damageNumber.CombatArena-module__TJhdva__damage {
+  color: var(--damage-red);
+}
+
+.CombatArena-module__TJhdva__damageNumber.CombatArena-module__TJhdva__heal {
+  color: var(--heal-green);
+}
+
+.CombatArena-module__TJhdva__damageNumber.CombatArena-module__TJhdva__crit {
+  color: var(--accent-gold);
+  text-shadow: 0 0 10px var(--accent-gold);
+  font-size: 2rem;
+}
+
+.CombatArena-module__TJhdva__damageNumber.CombatArena-module__TJhdva__miss {
+  color: var(--text-dim);
+  font-size: 1.2rem;
+}
+
+.CombatArena-module__TJhdva__damageNumber.CombatArena-module__TJhdva__gold, .CombatArena-module__TJhdva__damageNumber.CombatArena-module__TJhdva__exp {
+  color: var(--accent-gold);
+  font-size: 1.3rem;
+}
+
+@keyframes CombatArena-module__TJhdva__floatUp {
+  0% {
+    opacity: 1;
+    transform: translateX(-50%)translateY(0)scale(.8);
+  }
+
+  20% {
+    transform: translateX(-50%)translateY(-10px)scale(1.2);
+  }
+
+  100% {
+    opacity: 0;
+    transform: translateX(-50%)translateY(-70px)scale(.9);
+  }
+}
+
+.CombatArena-module__TJhdva__floatingRewards {
+  z-index: 20;
+  flex-direction: column;
+  align-items: center;
+  gap: .5rem;
+  animation: .5s ease-out forwards CombatArena-module__TJhdva__rewardsAppear;
+  display: flex;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.CombatArena-module__TJhdva__rewardItem {
+  color: var(--accent-gold);
+  text-shadow: 0 0 20px rgba(240, 192, 64, .5);
+  font-family: Rajdhani, sans-serif;
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+@keyframes CombatArena-module__TJhdva__rewardsAppear {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -30%)scale(.5);
+  }
+
+  60% {
+    transform: translate(-50%, -50%)scale(1.1);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translate(-50%, -50%)scale(1);
+  }
+}
+
+.CombatArena-module__TJhdva__victoryFlash {
+  z-index: 30;
+  pointer-events: none;
+  background: rgba(255, 255, 255, .3);
+  border-radius: 16px;
+  animation: .4s ease-out forwards CombatArena-module__TJhdva__flashFade;
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+}
+
+.CombatArena-module__TJhdva__defeatFlash {
+  z-index: 30;
+  pointer-events: none;
+  background: rgba(239, 68, 68, .3);
+  border-radius: 16px;
+  animation: .4s ease-out forwards CombatArena-module__TJhdva__flashFade;
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+}
+
+@keyframes CombatArena-module__TJhdva__flashFade {
+  0% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0;
+  }
+}
+
+.CombatArena-module__TJhdva__huntActions {
+  justify-content: center;
+  gap: .75rem;
+  display: flex;
+}
+
+.CombatArena-module__TJhdva__huntBtn {
+  color: #000;
+  cursor: pointer;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  background: linear-gradient(135deg, #f0c040, #d4a030);
+  border: none;
+  border-radius: 8px;
+  padding: .875rem 2rem;
+  font-family: Rajdhani, sans-serif;
+  font-size: 1.1rem;
+  font-weight: 700;
+  transition: all .15s;
+  box-shadow: 0 4px 12px rgba(240, 192, 64, .3);
+}
+
+.CombatArena-module__TJhdva__huntBtn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(240, 192, 64, .4);
+}
+
+.CombatArena-module__TJhdva__huntBtn:active:not(:disabled) {
+  transform: translateY(0)scale(.98);
+  box-shadow: 0 2px 8px rgba(240, 192, 64, .3);
+}
+
+.CombatArena-module__TJhdva__huntBtn:disabled {
+  opacity: .6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.CombatArena-module__TJhdva__huntBtn.CombatArena-module__TJhdva__bossBtn {
+  color: #fff;
+  background: linear-gradient(135deg, #9b6dff, #7b4ddf);
+  box-shadow: 0 4px 12px rgba(155, 109, 255, .3);
+}
+
+.CombatArena-module__TJhdva__huntBtn.CombatArena-module__TJhdva__bossBtn:hover:not(:disabled) {
+  box-shadow: 0 6px 16px rgba(155, 109, 255, .4);
+}
+
+.CombatArena-module__TJhdva__logContainer {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  max-height: 140px;
+  padding: .75rem 1rem;
+  font-family: JetBrains Mono, monospace;
+  font-size: .8rem;
+  overflow-y: auto;
+}
+
+.CombatArena-module__TJhdva__logLine {
+  color: var(--text-dim);
+  margin: 0;
+  line-height: 1.6;
+}
+
+.CombatArena-module__TJhdva__logLine:first-child {
+  color: var(--text);
+}
+
+/*# sourceMappingURL=apps_web_src_components_CombatArena_module_css_bad6b30c._.single.css.map*/

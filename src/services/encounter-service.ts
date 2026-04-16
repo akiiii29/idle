@@ -12,6 +12,10 @@ export interface PendingEncounter {
     name: string;
     rarity: Rarity;
     power: number;
+    role?: string | undefined;
+    skillType?: string | undefined;
+    skillPower?: number | undefined;
+    trigger?: string | undefined;
   };
   trapsWanted: number;
   trapPower: number;

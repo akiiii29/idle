@@ -6,26 +6,24 @@ import { pickRandom, randomInt, rollPercent } from "../services/rng";
 import { formatDuration, getRemainingCooldown, getUser, upsertItem } from "../services/user-service";
 import type { SlashCommand } from "../types/command";
 
+import { isDifferentVnDay, msUntilNextVnMidnight } from "../utils/time";
+
 export const dailyCommand: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName("daily")
-    .setDescription("Nhận phần thưởng vàng hằng ngày hoặc một vật phẩm ngẫu nhiên."),
+    .setDescription("Nhận phần thưởng hằng ngày (Reset lúc 00:00 VN)."),
   async execute(interaction) {
     try {
       const user = await getUser(interaction.user.id);
-
       if (!user) {
-        await interaction.reply({
-          content: "Bạn chưa đăng ký. Hãy dùng `/register` trước.",
-          ephemeral: true
-        });
+        await interaction.reply({ content: "Bạn chưa đăng ký. Hãy dùng `/register` trước.", ephemeral: true });
         return;
       }
 
-      const remaining = getRemainingCooldown(user.lastDaily, DAILY_COOLDOWN_MS);
-      if (remaining > 0) {
+      if (!isDifferentVnDay(user.lastDaily)) {
+        const remaining = msUntilNextVnMidnight();
         await interaction.reply({
-          content: `Phần thưởng hằng ngày của bạn đang trong thời gian chờ: ${formatDuration(remaining)}.`,
+          content: `Bạn đã nhận thưởng hôm nay rồi! Hãy quay lại sau: **${formatDuration(remaining)}**.`,
           ephemeral: true
         });
         return;
@@ -47,7 +45,7 @@ export const dailyCommand: SlashCommand = {
 
         const embed = new EmbedBuilder()
           .setColor(0xfee75c)
-          .setTitle("Phần thưởng hằng ngày")
+          .setTitle("🎁 Phần thưởng hằng ngày")
           .setDescription(`Bạn nhận được **${item.name}**.`);
 
         await interaction.reply({ embeds: [embed] });

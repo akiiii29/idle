@@ -1,0 +1,235 @@
+.panel {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.loading {
+  color: var(--text-dim);
+  font-size: 0.85rem;
+  text-align: center;
+  padding: 1rem;
+}
+
+.title {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin: 0;
+  color: var(--accent-gold);
+}
+
+/* Charges */
+.chargeSection {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.chargeRow {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.chargeOrb {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.4rem;
+  transition: all 0.3s;
+}
+
+.chargeFull {
+  background: rgba(240, 192, 64, 0.15);
+  border: 2px solid var(--accent-gold);
+  color: var(--accent-gold);
+  box-shadow: 0 0 12px rgba(240, 192, 64, 0.3);
+}
+
+.chargeEmpty {
+  background: var(--bg-primary);
+  border: 2px solid var(--border);
+  color: var(--text-dim);
+  opacity: 0.4;
+}
+
+.chargeInfo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.2rem;
+}
+
+.chargeLabel {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.nextCharge {
+  font-size: 0.7rem;
+  color: var(--text-dim);
+}
+
+/* Button */
+.startBtn {
+  width: 100%;
+  padding: 0.85rem;
+  background: var(--accent-gold);
+  color: #000;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.startBtn:hover:not(:disabled) {
+  background: #d4a017;
+  box-shadow: 0 0 16px rgba(240, 192, 64, 0.3);
+}
+
+.startBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Info box */
+.infoBox {
+  background: var(--bg-primary);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.infoBox p {
+  font-size: 0.75rem;
+  color: var(--text-dim);
+  margin: 0;
+}
+
+/* Result */
+.resultCard {
+  border-radius: 10px;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.winResult {
+  background: rgba(34, 197, 94, 0.05);
+  border: 1px solid var(--hp-green);
+}
+
+.diedResult {
+  background: rgba(239, 68, 68, 0.05);
+  border: 1px solid var(--hp-red);
+}
+
+.resultHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.resultStatus {
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.winResult .resultStatus { color: var(--hp-green); }
+.diedResult .resultStatus { color: var(--hp-red); }
+
+.resultFights {
+  font-size: 0.75rem;
+  color: var(--text-dim);
+}
+
+.resultStats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.5rem;
+}
+
+.resultStat {
+  background: var(--bg-primary);
+  border-radius: 8px;
+  padding: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.2rem;
+}
+
+.resultStatLabel {
+  font-size: 0.6rem;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+
+.resultStatVal {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+/* Fight log */
+.fightLog {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.logTitle {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-dim);
+  margin: 0;
+}
+
+.logGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.3rem;
+}
+
+.fightRow {
+  background: var(--bg-primary);
+  border-radius: 4px;
+  padding: 0.3rem 0.5rem;
+  font-size: 0.65rem;
+  display: flex;
+  gap: 0.3rem;
+  align-items: center;
+  color: var(--text-dim);
+}
+
+.fightRow span:last-child {
+  color: var(--accent-gold);
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.jackpotRow {
+  background: rgba(240, 192, 64, 0.1);
+  border: 1px solid var(--accent-gold);
+}
+
+.jackpotBadge {
+  font-size: 0.55rem !important;
+  color: var(--accent-gold) !important;
+}

@@ -6,7 +6,9 @@ export interface PendingHuntPreview {
   token: string;
   userId: string;
   trapsWanted: number;
+  trapItemName: string | undefined;
   cloversWanted: number;
+  cloverItemName: string | undefined;
   scoutLensToUse: number;
   forcedEventRoll: number;
   predictedBranch: HuntPreviewBranch;
@@ -19,7 +21,9 @@ const pendingHuntPreviews = new Map<string, PendingHuntPreview>();
 export function createHuntPreviewToken(params: {
   userId: string;
   trapsWanted: number;
+  trapItemName: string | undefined;
   cloversWanted: number;
+  cloverItemName: string | undefined;
   scoutLensToUse: number;
   forcedEventRoll: number;
   predictedBranch: HuntPreviewBranch;
@@ -36,7 +40,9 @@ export function createHuntPreviewToken(params: {
     token,
     userId: params.userId,
     trapsWanted: params.trapsWanted,
+    trapItemName: params.trapItemName,
     cloversWanted: params.cloversWanted,
+    cloverItemName: params.cloverItemName,
     scoutLensToUse: params.scoutLensToUse,
     forcedEventRoll: params.forcedEventRoll,
     predictedBranch: params.predictedBranch,

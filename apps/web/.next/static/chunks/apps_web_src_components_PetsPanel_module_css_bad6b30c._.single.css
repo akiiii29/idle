@@ -1,0 +1,130 @@
+/* [project]/apps/web/src/components/PetsPanel.module.css [app-client] (css) */
+.PetsPanel-module__NfdU4q__panel {
+  flex-direction: column;
+  gap: 1.5rem;
+  display: flex;
+}
+
+.PetsPanel-module__NfdU4q__title {
+  margin: 0;
+  font-family: Rajdhani, sans-serif;
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.PetsPanel-module__NfdU4q__section {
+  flex-direction: column;
+  gap: .75rem;
+  display: flex;
+}
+
+.PetsPanel-module__NfdU4q__sectionTitle {
+  text-transform: uppercase;
+  letter-spacing: .1em;
+  color: var(--text-dim);
+  margin: 0;
+  font-size: .75rem;
+}
+
+.PetsPanel-module__NfdU4q__grid {
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: .75rem;
+  display: grid;
+}
+
+.PetsPanel-module__NfdU4q__empty {
+  text-align: center;
+  color: var(--text-dim);
+  grid-column: 1 / -1;
+  padding: 2rem;
+}
+
+.PetsPanel-module__NfdU4q__petCard {
+  background: var(--bg-card);
+  border: 2px solid #444;
+  border-radius: 10px;
+  flex-direction: column;
+  gap: .3rem;
+  padding: .875rem;
+  transition: all .15s;
+  display: flex;
+}
+
+.PetsPanel-module__NfdU4q__petCard:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, .3);
+}
+
+.PetsPanel-module__NfdU4q__petCard.PetsPanel-module__NfdU4q__equipped {
+  background: rgba(240, 192, 64, .05);
+}
+
+.PetsPanel-module__NfdU4q__petHeader {
+  justify-content: space-between;
+  align-items: center;
+  display: flex;
+}
+
+.PetsPanel-module__NfdU4q__petRole {
+  font-size: 1.25rem;
+}
+
+.PetsPanel-module__NfdU4q__petLevel {
+  color: var(--text-dim);
+  background: var(--bg-primary);
+  border-radius: 4px;
+  padding: 2px 6px;
+  font-family: JetBrains Mono, monospace;
+  font-size: .7rem;
+}
+
+.PetsPanel-module__NfdU4q__petName {
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  margin: 0;
+  font-size: .85rem;
+  font-weight: 600;
+  overflow: hidden;
+}
+
+.PetsPanel-module__NfdU4q__petRarity {
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  margin: 0;
+  font-size: .65rem;
+}
+
+.PetsPanel-module__NfdU4q__petStats {
+  color: var(--text-dim);
+  justify-content: space-between;
+  font-family: JetBrains Mono, monospace;
+  font-size: .65rem;
+  display: flex;
+}
+
+.PetsPanel-module__NfdU4q__equipBadge {
+  color: var(--hp-green);
+  text-align: center;
+  font-size: .65rem;
+}
+
+.PetsPanel-module__NfdU4q__equippedLabel {
+  color: var(--hp-green);
+}
+
+.PetsPanel-module__NfdU4q__expBar {
+  background: var(--bg-primary);
+  border-radius: 2px;
+  height: 3px;
+  margin-top: .25rem;
+  overflow: hidden;
+}
+
+.PetsPanel-module__NfdU4q__expFill {
+  background: var(--accent-purple);
+  border-radius: 2px;
+  height: 100%;
+  transition: width .3s;
+}
+
+/*# sourceMappingURL=apps_web_src_components_PetsPanel_module_css_bad6b30c._.single.css.map*/

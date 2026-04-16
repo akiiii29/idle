@@ -3,12 +3,14 @@ import { ItemType } from "@prisma/client";
 import { CAPTURE_TIMEOUT_MS, EVENT_RATES } from "../constants/config";
 import { RARITY_COLORS, RARITY_BANNER, RARITY_BADGE, buildHpBar, randomRpgFooter, type Rarity } from "../utils/rpg-ui";
 import { handleHunt } from "./combat-system";
+import { runCombatAnimation, type CombatUIData } from "../utils/combat-ui";
 import { applyBeforeHuntItemEffects } from "./itemEffects";
 import { buildBeastButtons, buildChestButtons, createEncounterToken, startPendingEncounter, startPendingChest } from "./encounter-service";
 import { createWildBeast } from "./hunt-service";
 import { prisma } from "./prisma";
 import { updateQuestProgress } from "./quest-service";
 import { formatDuration } from "./user-service";
+import { randomInt } from "./rng";
 
 export function checkUserStatusErrors(user: any, now: Date): string | null {
   if (user.hospitalUntil && user.hospitalUntil > now) {
@@ -25,9 +27,14 @@ export function checkUserStatusErrors(user: any, now: Date): string | null {
 }
 
 export async function performCoreHunt(interaction: any, user: any, now: Date, options: {
-  trapsWanted: number, cloversWanted: number, scoutLensToUse: number, forcedEventRoll?: number
+  trapsWanted: number, 
+  trapItemName: string | undefined,
+  cloversWanted: number, 
+  cloverItemName: string | undefined,
+  scoutLensToUse: number, 
+  forcedEventRoll?: number
 }) {
-  const { trapsWanted, cloversWanted, scoutLensToUse, forcedEventRoll } = options;
+  const { trapsWanted, trapItemName, cloversWanted, cloverItemName, scoutLensToUse, forcedEventRoll } = options;
   let shouldReleaseBusy = false;
 
   try {
@@ -55,10 +62,14 @@ export async function performCoreHunt(interaction: any, user: any, now: Date, op
 
     const effects = effectsResult.ctx;
     
-    const userTrapObj = user.inventory.find((i: any) => i.type === ItemType.TRAP);
+    const userTrapObj = trapItemName 
+      ? user.inventory.find((i: any) => i.name === trapItemName) 
+      : user.inventory.find((i: any) => i.type === ItemType.TRAP);
     const trapPower = userTrapObj?.power ?? 1;
 
-    const userCloverObj = user.inventory.find((i: any) => i.type === ItemType.LUCK_BUFF);
+    const userCloverObj = cloverItemName 
+      ? user.inventory.find((i: any) => i.name === cloverItemName) 
+      : user.inventory.find((i: any) => i.type === ItemType.LUCK_BUFF);
     const cloverPower = userCloverObj?.power ?? 1;
 
     const cloverLuck = cloversWanted * cloverPower;
@@ -100,19 +111,55 @@ export async function performCoreHunt(interaction: any, user: any, now: Date, op
         return;
       }
 
-      const log = combat.battleLogs.join("\n");
-      const embed = new EmbedBuilder()
-        .setColor(combat.isWin ? 0x57f287 : 0xed4245)
-        .setAuthor({ name: "Báo cáo chiến đấu", iconURL: interaction.user.displayAvatarURL() })
-        .setTitle(combat.isWin ? `⚔️ Chiến thắng trước ${combat.enemyName}` : `💀 Thất bại trước ${combat.enemyName}`)
-        .setDescription(scoutPrefix ? `${scoutPrefix}\n\n${log.length > 2000 ? log.substring(0, 1997) + "..." : log}` : (log.length > 2000 ? log.substring(0, 1997) + "..." : log))
-        .addFields(
-          { name: "🎁 Phần thưởng", value: combat.isWin ? `XP: \`+${combat.expGained}\` | Vàng: \`+${combat.goldGained}\`` : "Không nhận được phần thưởng.", inline: true },
-          { name: "🩺 Trạng thái cuối cùng", value: buildHpBar(combat.finalHp, user.maxHp) + (combat.hospitalUntil ? `\n🏥 Bệnh viện: \`${formatDuration(combat.hospitalUntil.getTime() - now.getTime())}\`` : ""), inline: true }
-        )
-        .setFooter({ text: randomRpgFooter() });
+      // Build CombatUIData for the result embed (skills/synergies already shown per-turn)
+      const uiData: CombatUIData = {
+        isWin: combat.isWin,
+        isBoss: false,
+        enemyName: combat.enemyName,
+        playerHpBar: buildHpBar(combat.finalHp, (combat as any).playerMaxHp),
+        enemyHpBar: !combat.isWin ? buildHpBar(combat.finalEnemyHp, (combat as any).enemyMaxHp) : undefined,
+        goldGained: combat.goldGained,
+        expGained: combat.expGained,
+        hospitalDuration: combat.hospitalUntil
+          ? formatDuration(combat.hospitalUntil.getTime() - now.getTime())
+          : undefined,
+        achievementProgressText: (combat as any).achievementData?.updatedAchievements?.length > 0
+          ? (combat as any).achievementData.formattedProgress
+          : undefined,
+        scoutPrefix: scoutPrefix || undefined,
+        summary: (combat as any).combatSummary ?? undefined,
+      };
 
-      await interaction.editReply({ embeds: [embed] });
+      await runCombatAnimation(
+        interaction,
+        uiData,
+        interaction.user.displayAvatarURL({ extension: "png", size: 128 }),
+      );
+
+      // Achievement completion notifications
+      if ((combat as any).achievementData?.notificationSent) {
+        await interaction.followUp({ embeds: (combat as any).achievementData.embedPayload });
+      }
+
+      // --- LEVEL UP NOTIFICATION ---
+      if (combat.levelsGained > 0 && combat.newStats) {
+        const lvEmbed = new EmbedBuilder()
+          .setColor(0xF1C40F)
+          .setTitle("🎊 CHÚC MỪNG LÊN CẤP! 🎊")
+          .setDescription(`Bạn đã đạt đến cấp độ **${combat.newStats.level}**!`)
+          .addFields(
+            { name: "💪 Sức mạnh", value: `\`${combat.newStats.str}\``, inline: true },
+            { name: "🏃 Nhanh nhẹn", value: `\`${combat.newStats.agi}\``, inline: true },
+            { name: "🍀 May mắn", value: `\`${combat.newStats.luck}\``, inline: true },
+            { name: "❤️ Máu tối đa", value: `\`${combat.newStats.maxHp}\``, inline: true }
+          )
+          .setFooter({ text: "Chỉ số của bạn đã được gia tăng tự động!" });
+        
+        await interaction.followUp({ embeds: [lvEmbed] });
+        
+        // Track Achievement
+        await updateQuestProgress(user.id, "slayer_novice", combat.newStats.level, true);
+      }
       return;
     }
 
@@ -143,7 +190,8 @@ export async function performCoreHunt(interaction: any, user: any, now: Date, op
 
     if (eventRoll < combatRate + chestRate + catchRate) {
       const beastLuck = effects.luck + cloverLuck + effects.beastBaitLuckBonus;
-      const beast = createWildBeast(user.level, beastLuck);
+      const beastLevel = Math.max(1, user.level - randomInt(0, 2));
+      const beast = createWildBeast(beastLevel, beastLuck);
       const token = createEncounterToken();
 
       await prisma.$transaction(async (tx) => {

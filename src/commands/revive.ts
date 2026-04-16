@@ -1,6 +1,7 @@
 import { EmbedBuilder, SlashCommandBuilder } from "discord.js";
-import { reviveUser } from "../services/user-service";
+import { reviveUser, getUserWithRelations } from "../services/user-service";
 import { prisma } from "../services/prisma";
+import { computeCombatStats } from "../services/stats-service";
 import type { SlashCommand } from "../types/command";
 
 export const reviveCommand: SlashCommand = {
@@ -17,8 +18,18 @@ export const reviveCommand: SlashCommand = {
         return;
       }
 
-      // Fetch updated user for current HP display
-      const user = await prisma.user.findUnique({ where: { id: interaction.user.id } });
+      await interaction.deferReply();
+      // Fetch updated user with relations for current HP display
+      const user = await getUserWithRelations(interaction.user.id);
+      if (!user) {
+         await interaction.editReply("Không tìm thấy dữ liệu.");
+         return;
+      }
+
+      const equippedItems = user.inventory?.filter((i: any) => i.isEquipped) || [];
+      const equippedPets = user.beasts?.filter((b: any) => b.isEquipped) || [];
+      const stats = computeCombatStats(user, equippedItems, equippedPets);
+      const finalMaxHp = stats.final.maxHp;
 
       const embed = new EmbedBuilder()
         .setColor(0x2ecc71)
@@ -28,23 +39,22 @@ export const reviveCommand: SlashCommand = {
         .addFields(
           {
             name: "❤️ Máu",
-            value: user ? `\`${user.maxHp}/${user.maxHp}\`` : "Đầy",
+            value: `\`${finalMaxHp}/${finalMaxHp}\``,
             inline: true
           },
           {
             name: "💰 Vàng",
-            value: user ? `\`${user.gold}\`` : "—",
+            value: `\`${user.gold}\``,
             inline: true
           }
         )
         .setFooter({ text: "Hãy giữ an toàn, thợ săn!" });
 
-      await interaction.reply({ embeds: [embed] });
+      await interaction.editReply({ embeds: [embed] });
     } catch (error) {
       console.error("revive command failed", error);
-      await interaction.reply({
-        content: "Có lỗi xảy ra. Hãy thử lại.",
-        ephemeral: true
+      await interaction.editReply({
+        content: "Có lỗi xảy ra. Hãy thử lại."
       });
     }
   }

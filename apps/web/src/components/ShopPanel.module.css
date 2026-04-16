@@ -1,0 +1,138 @@
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.title {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.goldDisplay {
+  font-family: 'JetBrains Mono', monospace;
+  color: var(--accent-gold);
+  font-weight: 600;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+}
+
+@media (max-width: 600px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.slotCard {
+  background: var(--bg-card);
+  border: 2px solid #444;
+  border-radius: 12px;
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  position: relative;
+  transition: all 0.15s;
+}
+
+.slotCard:hover:not(.sold) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.slotCard.sold {
+  opacity: 0.5;
+}
+
+.soldOverlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--text-dim);
+  background: rgba(0, 0, 0, 0.4);
+  border-radius: 10px;
+}
+
+.slotIcon {
+  font-size: 2.5rem;
+  line-height: 1;
+}
+
+.slotName {
+  font-weight: 600;
+  font-size: 0.9rem;
+  text-align: center;
+  margin: 0;
+}
+
+.slotRarity {
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin: 0;
+}
+
+.slotPower {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.75rem;
+  color: var(--text-dim);
+  margin: 0;
+}
+
+.buyBtn {
+  margin-top: 0.5rem;
+  width: 100%;
+  padding: 0.6rem;
+  background: linear-gradient(135deg, var(--accent-gold), #d4a030);
+  color: #000;
+  border: none;
+  border-radius: 6px;
+  font-family: 'Rajdhani', sans-serif;
+  font-weight: 700;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.buyBtn:hover:not(:disabled) {
+  transform: scale(1.02);
+  box-shadow: 0 2px 8px rgba(240, 192, 64, 0.4);
+}
+
+.buyBtn:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.buyBtn:disabled {
+  cursor: not-allowed;
+}
+
+.buyBtn.cantAfford {
+  background: var(--bg-primary);
+  color: var(--text-dim);
+}
+
+.refreshNote {
+  font-size: 0.75rem;
+  color: var(--text-dim);
+  text-align: center;
+  margin: 0;
+}

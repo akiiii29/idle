@@ -8,6 +8,7 @@ import {
   XP_BAR_SIZE
 } from "../constants/config";
 import { prisma } from "./prisma";
+import { computeCombatStats } from "./stats-service";
 
 type DbClient = PrismaClient | Parameters<Parameters<typeof prisma.$transaction>[0]>[0];
 
@@ -20,18 +21,20 @@ export interface HpUpdateResult {
 export function getUpdatedHP(
   user: {
     currentHp: number;
-    maxHp: number;
+    maxHp: number; // Base max HP
     lastHpUpdatedAt: Date;
     hospitalUntil: Date | null;
     tavernUntil?: Date | null;
   },
-  now = new Date()
+  now = new Date(),
+  finalMaxHp?: number
 ): HpUpdateResult {
   const lastUpdated = user.lastHpUpdatedAt ?? now;
   const currentHp = user.currentHp;
+  const maxHp = finalMaxHp ?? user.maxHp;
 
-  if (currentHp >= user.maxHp) {
-    return { currentHp: user.maxHp, lastHpUpdatedAt: lastUpdated, recovered: 0 };
+  if (currentHp >= maxHp) {
+    return { currentHp: maxHp, lastHpUpdatedAt: lastUpdated, recovered: 0 };
   }
 
   // Still in hospital — HP doesn't regen
@@ -48,18 +51,18 @@ export function getUpdatedHP(
     const tavernEffectiveNow = tavernEnd.getTime() < now.getTime() ? tavernEnd : now;
 
     // Heal at tavern rate up to tavernEffectiveNow.
-    if (tavernEffectiveNow.getTime() > lastUpdated.getTime() && hp < user.maxHp) {
+    if (tavernEffectiveNow.getTime() > lastUpdated.getTime() && hp < maxHp) {
       const elapsedMs = tavernEffectiveNow.getTime() - lastUpdated.getTime();
       const recoveredAtTavern = Math.floor(elapsedMs / TAVERN_HEAL_INTERVAL_MS);
       if (recoveredAtTavern > 0) {
-        hp = Math.min(user.maxHp, hp + recoveredAtTavern);
+        hp = Math.min(maxHp, hp + recoveredAtTavern);
         const consumedMs = recoveredAtTavern * TAVERN_HEAL_INTERVAL_MS;
         lastHpUpdatedAt = new Date(lastUpdated.getTime() + consumedMs);
       }
     }
 
     // If tavern is finished, passive regen starts from tavernEnd (not the last tick).
-    if (tavernEnd.getTime() <= now.getTime() && hp < user.maxHp) {
+    if (tavernEnd.getTime() <= now.getTime() && hp < maxHp) {
       lastHpUpdatedAt = tavernEnd;
     }
 
@@ -68,7 +71,7 @@ export function getUpdatedHP(
       if (hp === currentHp) {
         return { currentHp: hp, lastHpUpdatedAt, recovered: 0 };
       }
-      return { currentHp: hp, lastHpUpdatedAt: hp >= user.maxHp ? now : lastHpUpdatedAt, recovered: hp - currentHp };
+      return { currentHp: hp, lastHpUpdatedAt: hp >= maxHp ? now : lastHpUpdatedAt, recovered: hp - currentHp };
     }
   }
 
@@ -80,20 +83,27 @@ export function getUpdatedHP(
     return { currentHp: hp, lastHpUpdatedAt, recovered: 0 };
   }
 
-  hp = Math.min(user.maxHp, hp + recovered);
+  hp = Math.min(maxHp, hp + recovered);
   const consumedMs = recovered * HP_RECOVERY_INTERVAL_MS;
   const timestamp = new Date(lastHpUpdatedAt.getTime() + consumedMs);
 
   return {
     currentHp: hp,
-    lastHpUpdatedAt: hp >= user.maxHp ? now : timestamp,
+    lastHpUpdatedAt: hp >= maxHp ? now : timestamp,
     recovered: hp - currentHp
   };
 }
 
-export async function normalizeUserState(user: any, now = new Date()): Promise<any> {
+export async function normalizeUserState(user: any, now = new Date(), customInclude?: any): Promise<any> {
   const data: Record<string, any> = {};
-  const hpState = getUpdatedHP(user, now);
+
+  // Account for items/pets maxHp bonus during regen!
+  const equippedItems = user.inventory?.filter(i => i.isEquipped) || [];
+  const equippedPets = user.beasts?.filter(b => b.isEquipped) || [];
+  const stats = computeCombatStats(user, equippedItems, equippedPets);
+  const finalMaxHp = stats.final.maxHp;
+
+  const hpState = getUpdatedHP(user, now, finalMaxHp);
   const currentHp = user.currentHp;
 
   if (hpState.currentHp !== currentHp || hpState.lastHpUpdatedAt.getTime() !== user.lastHpUpdatedAt.getTime()) {
@@ -102,7 +112,7 @@ export async function normalizeUserState(user: any, now = new Date()): Promise<a
   }
 
   // If tavern healing already reached max HP early, stop resting immediately.
-  if (user.tavernUntil && user.tavernUntil > now && hpState.currentHp >= user.maxHp) {
+  if (user.tavernUntil && user.tavernUntil > now && hpState.currentHp >= finalMaxHp) {
     data.tavernUntil = null;
     if (user.isBusy) {
       data.isBusy = false;
@@ -113,7 +123,7 @@ export async function normalizeUserState(user: any, now = new Date()): Promise<a
   // Hospital discharged — full heal both hp fields
   if (user.hospitalUntil && user.hospitalUntil <= now) {
     data.hospitalUntil = null;
-    data.currentHp = user.maxHp;
+    data.currentHp = finalMaxHp;
     data.lastHpUpdatedAt = now;
   }
 
@@ -132,63 +142,89 @@ export async function normalizeUserState(user: any, now = new Date()): Promise<a
 
   return prisma.user.update({
     where: { id: user.id },
-    data
+    data,
+    include: customInclude || { beasts: true, inventory: true }
   });
 }
 
 /** Pay Gold equal to maxHp to instantly revive from hospital */
 export async function reviveUser(userId: string): Promise<{ success: boolean; message: string }> {
-  return prisma.$transaction(async (tx) => {
-    const user = await tx.user.findUnique({ where: { id: userId } });
-    if (!user) return { success: false, message: "Không tìm thấy người chơi." };
+  // Use a mock tx-safe logic or just fetch relationships beforehand
+  const user = await getUserWithRelations(userId);
+  if (!user) return { success: false, message: "Không tìm thấy người chơi." };
 
-    if (!user.hospitalUntil || user.hospitalUntil <= new Date()) {
-      return { success: false, message: "Bạn không ở trong bệnh viện!" };
-    }
+  if (!user.hospitalUntil || user.hospitalUntil <= new Date()) {
+    return { success: false, message: "Bạn không ở trong bệnh viện!" };
+  }
 
-    const cost = user.maxHp;
-    if (user.gold < cost) {
-      return {
-        success: false,
-        message: `❌ Bạn cần **${cost} vàng** để thanh toán chi phí bệnh viện. Bạn hiện có **${user.gold} vàng**.`
-      };
-    }
+  const equippedItems = user.inventory?.filter(i => i.isEquipped) || [];
+  const equippedPets = user.beasts?.filter(b => b.isEquipped) || [];
+  const stats = computeCombatStats(user, equippedItems, equippedPets);
+  const finalMaxHp = stats.final.maxHp;
 
-    await tx.user.update({
-      where: { id: userId },
-      data: {
-        gold: { decrement: cost },
-        currentHp: user.maxHp,
-        hospitalUntil: null,
-        lastHpUpdatedAt: new Date()
-      }
-    });
-
+  const cost = Math.ceil(finalMaxHp * 1.2);
+  if (user.gold < cost) {
     return {
-      success: true,
-      message: `🚑 **Tái sinh khẩn cấp!** Bạn đã trả **${cost} vàng** và hiện ở trạng thái máu đầy (**${user.maxHp}/${user.maxHp}**)!`
+      success: false,
+      message: `❌ Bạn cần **${cost} vàng** để thanh toán chi phí bệnh viện. Bạn hiện có **${user.gold} vàng**.`
     };
+  }
+
+  await prisma.user.update({
+    where: { id: userId },
+    data: {
+      gold: { decrement: cost },
+      currentHp: finalMaxHp,
+      hospitalUntil: null,
+      lastHpUpdatedAt: new Date()
+    }
   });
+
+  return {
+    success: true,
+    message: `🚑 **Tái sinh khẩn cấp!** Bạn đã trả **${cost} vàng** và hiện ở trạng thái máu đầy (**${finalMaxHp}/${finalMaxHp}**)!`
+  };
 }
 
 export async function getUser(userId: string): Promise<any | null> {
-  const user = await prisma.user.findUnique({ where: { id: userId } });
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    include: { inventory: true, beasts: true }
+  });
   if (!user) return null;
   return normalizeUserState(user);
 }
 
-export async function getUserWithRelations(userId: string): Promise<any | null> {
-  const user = await getUser(userId);
-  if (!user) return null;
-
-  return prisma.user.findUnique({
-    where: { id: userId },
-    include: {
-      beasts: true,
-      inventory: true,
-      skills: { include: { skill: true } }
-    }
+export async function getUserByName(name: string): Promise<any | null> {
+  const user = await prisma.user.findFirst({
+    where: { username: name },
+    include: { inventory: true, beasts: true }
   });
+  if (!user) return null;
+  return normalizeUserState(user);
+}
+
+export async function getUserWithRelations(identifier: string): Promise<any | null> {
+  const include = {
+    beasts: true,
+    inventory: true,
+    skills: { include: { skill: true } }
+  };
+
+  let user = await prisma.user.findUnique({
+    where: { id: identifier },
+    include
+  });
+
+  if (!user) {
+    user = await prisma.user.findFirst({
+      where: { username: identifier },
+      include
+    });
+  }
+
+  if (!user) return null;
+  return normalizeUserState(user, new Date(), include);
 }
 
 export function getRemainingCooldown(lastUsed: Date | null | undefined, cooldownMs: number, now = new Date()): number {
@@ -224,4 +260,23 @@ export async function upsertItem(
     create: { ownerId, name: item.name, type: item.type, power: item.power, quantity: item.quantity ?? 1 },
     update: { quantity: { increment: item.quantity ?? 1 }, power: item.power }
   });
+}
+
+export async function handleUserAutocomplete(interaction: any) {
+  const focusedValue = interaction.options.getFocused();
+  if (!focusedValue) {
+    const users = await prisma.user.findMany({ take: 25, select: { username: true } });
+    await interaction.respond(users.filter(u => u.username).map(u => ({ name: u.username as string, value: u.username as string })));
+    return;
+  }
+
+  const users = await prisma.user.findMany({
+    where: { username: { contains: focusedValue } },
+    take: 25,
+    select: { username: true }
+  });
+
+  await interaction.respond(
+    users.filter(u => u.username).map(u => ({ name: u.username as string, value: u.username as string }))
+  );
 }

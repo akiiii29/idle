@@ -1,0 +1,341 @@
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  position: relative;
+}
+
+.toast {
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  z-index: 1000;
+  animation: slideIn 0.2s ease-out;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.toast.success {
+  background: rgba(34, 197, 94, 0.15);
+  border: 1px solid var(--hp-green);
+  color: var(--hp-green);
+}
+
+.toast.error {
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid var(--hp-red);
+  color: var(--hp-red);
+}
+
+@keyframes slideIn {
+  from { opacity: 0; transform: translateX(20px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+.title {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 1.75rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.tabs {
+  display: flex;
+  gap: 0.5rem;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 0.5rem;
+}
+
+.tab {
+  padding: 0.5rem 1rem;
+  background: transparent;
+  border: none;
+  color: var(--text-dim);
+  font-size: 0.9rem;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: all 0.15s;
+}
+
+.tab:hover {
+  color: var(--text);
+  background: var(--bg-card-hover);
+}
+
+.tab.activeTab {
+  color: var(--accent-gold);
+  background: rgba(240, 192, 64, 0.1);
+}
+
+.filters {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.filterBtn {
+  padding: 0.45rem 0.85rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  font-size: 0.8rem;
+  cursor: pointer;
+  border-radius: 20px;
+  transition: all 0.15s;
+}
+
+.filterBtn:hover {
+  border-color: var(--text-dim);
+  color: var(--text);
+}
+
+.filterBtn.activeFilter {
+  background: var(--accent-gold);
+  border-color: var(--accent-gold);
+  color: #000;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 0.85rem;
+}
+
+.empty {
+  grid-column: 1 / -1;
+  text-align: center;
+  color: var(--text-dim);
+  padding: 2rem;
+  font-size: 0.9rem;
+}
+
+.itemCard {
+  background: var(--bg-card);
+  border: 2px solid #444;
+  border-radius: 10px;
+  padding: 0.85rem 0.75rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+  position: relative;
+  transition: all 0.15s;
+  cursor: default;
+}
+
+.itemCard:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
+}
+
+.itemCard.equipped {
+  background: rgba(240, 192, 64, 0.05);
+}
+
+.itemIcon {
+  font-size: 2.2rem;
+  line-height: 1;
+}
+
+.itemName {
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-align: center;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
+  margin: 0;
+  display: block;
+  width: 100%;
+}
+
+.itemRarity {
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin: 0;
+}
+
+.qtyBadge {
+  position: absolute;
+  top: 5px;
+  left: 5px;
+  background: var(--bg-primary);
+  color: var(--text);
+  font-size: 0.65rem;
+  font-family: 'JetBrains Mono', monospace;
+  padding: 2px 5px;
+  border-radius: 4px;
+}
+
+.upgradeBadge {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  background: var(--accent-gold);
+  color: #000;
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 2px 5px;
+  border-radius: 4px;
+}
+
+.equippedLabel {
+  font-size: 0.7rem;
+  color: var(--hp-green);
+}
+
+.itemActions {
+  display: flex;
+  gap: 0.3rem;
+  width: 100%;
+  margin-top: 0.3rem;
+}
+
+.useBtn,
+.sellBtn {
+  flex: 1;
+  padding: 0.4rem 0.3rem;
+  border: none;
+  border-radius: 5px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.1s;
+}
+
+.useBtn {
+  background: var(--hp-green);
+  color: #000;
+}
+
+.useBtn:hover:not(:disabled) {
+  background: #16a34a;
+}
+
+.useBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.sellBtn {
+  background: var(--bg-primary);
+  color: var(--text-dim);
+  border: 1px solid var(--border);
+}
+
+.sellBtn:hover:not(:disabled) {
+  border-color: var(--accent-gold);
+  color: var(--accent-gold);
+}
+
+.sellBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ── Enhanced Tooltip ── */
+.itemTooltip {
+  display: none;
+  position: absolute;
+  bottom: calc(100% + 10px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: #0d0e1a;
+  border: 1px solid var(--accent-gold);
+  border-radius: 10px;
+  padding: 0.85rem;
+  min-width: 180px;
+  max-width: 240px;
+  z-index: 200;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+}
+
+.itemCard:hover .itemTooltip {
+  display: block;
+  animation: tooltipIn 0.15s ease-out;
+}
+
+@keyframes tooltipIn {
+  from { opacity: 0; transform: translateX(-50%) translateY(4px); }
+  to { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
+.tooltipHeader {
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.tooltipName {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text);
+  margin: 0 0 0.2rem;
+}
+
+.tooltipRarity {
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin: 0;
+}
+
+.tooltipRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 0.25rem 0;
+}
+
+.tooltipRow span:first-child {
+  color: var(--text-dim);
+  font-size: 0.78rem;
+}
+
+.tooltipRow span:last-child {
+  color: var(--text);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.tooltipDivider {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 0.4rem 0;
+}
+
+.tooltipFooter {
+  border-top: 1px solid var(--border);
+  padding-top: 0.5rem;
+  margin-top: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.tooltipSet {
+  font-size: 0.72rem;
+  color: var(--accent-purple);
+  text-align: center;
+  font-weight: 600;
+}
+
+.tooltipUpgrade {
+  font-size: 0.68rem;
+  color: var(--accent-gold);
+  text-align: center;
+}
+
+.tooltipHint {
+  font-size: 0.62rem;
+  color: var(--text-dim);
+  text-align: center;
+  font-style: italic;
+}

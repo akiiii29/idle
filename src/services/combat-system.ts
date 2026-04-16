@@ -1,316 +1,170 @@
-// @ts-nocheck
+/**
+ * combat-system.ts (Refactored)
+ * This is the UI Layer / Handler for Discord.
+ * It manages interaction, embeds, and database updates by calling the Combat Engine.
+ */
+
 import { EmbedBuilder } from "discord.js";
-import { ItemType } from "@prisma/client";
 import { prisma } from "./prisma";
-import { getUserWithRelations } from "./user-service";
+import { getUserWithRelations, formatDuration } from "./user-service";
 import { randomInt } from "./rng";
+import { updateQuestProgress } from "./quest-service";
 import { applyLevelUps } from "./leveling";
+import { buildHpBar } from "../utils/rpg-ui";
+import { simulateCombat } from "./combat-engine";
+import { type BattleResult as EngineResult } from "../types/combat";
+import { computeCombatStats } from "./stats-service";
+import { updateAchievementProgress, formatAchievementProgress, buildAchievementNotifications } from "./achievement-service";
+import { TITLES } from "../constants/titles";
+import { addPetExp } from "./pet-management";
 
-export interface CombatContext {
-  player: { atk: number; def: number; spd: number; hp: number; maxHp: number; critRate: number; petPower: number; };
-  enemy: { atk: number; def: number; spd: number; hp: number; };
-  multipliers: { damage: number; gold: number; exp: number; };
-  flags: { dodged: boolean; ignoreDef: boolean; extraHit: boolean; };
-  extra: { bonusDamage: number; heal: number; reduceDamage: number; };
-}
+export function getTitleGoldMultiplier(title: string | null): number {
+  if (!title) return 1.0;
+  let multiplier = 1.0;
+  let keys: string[] = [];
+  try {
+    if (title.startsWith("[")) keys = JSON.parse(title);
+    else keys = [title];
+  } catch (e) {}
 
-export const SKILL_HANDLERS: Record<string, (ctx: CombatContext, skill: any) => void> = {
-  DAMAGE: (ctx, skill) => { 
-    let addon = skill.multiplier;
-    if (skill.scaleWithHp) addon += (1 - (ctx.player.hp / ctx.player.maxHp));
-    if (skill.scaleWithPet) addon += (ctx.player.petPower * 0.01);
-    ctx.multipliers.damage += addon; 
-    if (skill.ignoreDef) ctx.flags.ignoreDef = true;
-    if (skill.extraHit) ctx.flags.extraHit = true;
-  },
-  DOT: (ctx, skill) => { ctx.extra.bonusDamage += ctx.player.atk * skill.multiplier; },
-  DODGE: (ctx) => { ctx.flags.dodged = true; },
-  HEAL: (ctx, skill) => { ctx.extra.heal += ctx.player.atk * skill.multiplier; },
-  GOLD: (ctx, skill) => { ctx.multipliers.gold += skill.multiplier; },
-  REDUCE_DAMAGE: (ctx, skill) => { ctx.extra.reduceDamage += skill.multiplier; },
-  CHAOS: (ctx, skill) => {
-    const roll = Math.random();
-    if (roll < 0.33) ctx.multipliers.damage += 0.5;
-    else if (roll < 0.66) ctx.extra.heal += ctx.player.maxHp * 0.2;
-    else ctx.extra.bonusDamage += ctx.player.atk;
-  },
-  TAME: () => {}
-};
-
-function applySkills(userSkills: any[], trigger: string, ctx: CombatContext): string[] {
-  const activatedSkills: string[] = [];
-  if (!userSkills || userSkills.length === 0) return activatedSkills;
-
-  for (const us of userSkills) {
-    const skill = us.skill;
-    if (skill.trigger !== trigger) continue;
-    if (Math.random() > skill.chance) continue;
-
-    const handler = SKILL_HANDLERS[skill.type];
-    if (handler) {
-      if (skill.type === "DODGE" && ctx.flags.dodged) continue; // Prevent multiple dodge procs
-      handler(ctx, skill);
-      activatedSkills.push(skill.name);
-    }
+  for (const k of keys) {
+    const d = TITLES.find(t => t.key === k);
+    if (d && d.effectType === "goldGain") multiplier += d.effectValue;
   }
-  return activatedSkills;
-}
-
-export interface BattleResult {
-  isWin: boolean;
-  enemyName: string;
-  battleLogs: string[];
-  goldGained: number;
-  expGained: number;
-  hpLost: number;
-  hospitalUntil?: Date;
-  finalHp: number;
+  return multiplier;
 }
 
 export interface HuntCombatModifiers {
-  // Temporary stat overrides for this hunt only
   str?: number;
   agi?: number;
   luck?: number;
-
-  // Combat modifiers
-  playerDamageMultiplier?: number; // hunters_mark
-  enemyStrengthMultiplier?: number; // golden_contract
-  topPetBonusMultiplier?: number; // spirit_bond (base 0.5 => 0.8)
-
-  // Reward multipliers
-  goldMultiplier?: number; // risk_coin + golden_contract gold
-  expMultiplier?: number; // golden_contract exp
+  playerDamageMultiplier?: number;
+  enemyStrengthMultiplier?: number;
+  topPetBonusMultiplier?: number;
+  goldMultiplier?: number;
+  expMultiplier?: number;
+  isBoss?: boolean;
 }
 
 export async function handleHunt(
   interaction: any,
   userId: string,
   modifiers: HuntCombatModifiers = {}
-): Promise<BattleResult | string> {
+) {
   const user = await getUserWithRelations(userId);
   if (!user) return "Không tìm thấy người chơi.";
-  
+
   if (user.hospitalUntil && user.hospitalUntil > new Date()) {
     return "Bạn vẫn đang hồi phục ở bệnh viện.";
   }
-
   if (user.currentHp <= 0) {
     return "Bạn không còn HP! Hãy đợi hồi phục hoặc dùng vật phẩm.";
   }
 
-  // 1. Calculate Final Stats
-  const equippedItems = user.inventory.filter((i: any) => i.isEquipped);
-  const bonusStr = equippedItems.reduce((acc: number, i: any) => acc + i.bonusStr, 0);
-  const bonusAgi = equippedItems.reduce((acc: number, i: any) => acc + i.bonusAgi, 0);
-  const bonusDef = equippedItems.reduce((acc: number, i: any) => acc + i.bonusDef, 0);
-  const bonusHp = equippedItems.reduce((acc: number, i: any) => acc + i.bonusHp, 0);
-
-  const topBeast = user.beasts.length > 0 ? [...user.beasts].sort((a,b) => b.power - a.power)[0] : null;
-
+  // 1. Prepare Stats via Stat Pipeline
   const effectiveStr = modifiers.str ?? user.str;
   const effectiveAgi = modifiers.agi ?? user.agi;
   const effectiveLuck = modifiers.luck ?? user.luck;
 
-  const playerDamageMultiplier = modifiers.playerDamageMultiplier ?? 1;
-  const enemyStrengthMultiplier = modifiers.enemyStrengthMultiplier ?? 1;
-  const topPetBonusMultiplier = modifiers.topPetBonusMultiplier ?? 0.5;
-
-  const goldMultiplier = modifiers.goldMultiplier ?? 1;
-  const expMultiplier = modifiers.expMultiplier ?? 1;
-
-  const playerAtk = effectiveStr + bonusStr + (topBeast ? topBeast.power * topPetBonusMultiplier : 0);
-  const playerDef = (effectiveAgi * 0.5) + bonusDef;
-  const playerSpd = effectiveAgi + bonusAgi;
-  const critRate = effectiveLuck * 0.005;
-
-  // 2. Monster Generation
-  const lvl = user.level;
-  const enemyMaxHp = (50 + (lvl * 15)) * enemyStrengthMultiplier;
-  let enemyHp = enemyMaxHp;
-  const enemyAtk = (5 + (lvl * 4)) * enemyStrengthMultiplier;
-  const enemyDef = (2 + (lvl * 2)) * enemyStrengthMultiplier;
-  const enemySpd = (5 + (lvl * 2)) * enemyStrengthMultiplier;
-  const enemyName = `Quái thú cấp ${lvl}`;
-
-  // 3. Combat Loop
-  const battleLogs: string[] = [];
-  let isWin = false;
-  let turn = 1;
-
-  const ctx: CombatContext = {
-    player: { atk: playerAtk, def: playerDef, spd: playerSpd, hp: user.currentHp, maxHp: user.maxHp, critRate, petPower: topBeast ? topBeast.power : 0 },
-    enemy: { atk: enemyAtk, def: enemyDef, spd: enemySpd, hp: enemyHp },
-    multipliers: { damage: playerDamageMultiplier, gold: goldMultiplier, exp: expMultiplier },
-    flags: { dodged: false, ignoreDef: false, extraHit: false },
-    extra: { bonusDamage: 0, heal: 0, reduceDamage: 0 }
+  // Create an artificial user for pipeline calculation overriding local hunt modifiers
+  const pipedUser = {
+    str: effectiveStr,
+    agi: effectiveAgi,
+    maxHp: user.maxHp,
+    luck: effectiveLuck
   };
 
-  const equippedSkills = user.skills.filter((s: any) => s.isEquipped);
+  const equippedItems = user.inventory.filter((i: any) => i.isEquipped);
+  const equippedPets = user.beasts.filter((b: any) => b.isEquipped);
 
-  const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+  // Custom Buffs translation (from hunt modifiers)
+  const tempBuffs: any[] = [];
+  if (modifiers.playerDamageMultiplier && modifiers.playerDamageMultiplier !== 1) {
+    tempBuffs.push({ type: "STR_PERCENT_BUFF", power: (modifiers.playerDamageMultiplier - 1) * 100 });
+  }
+
+  // Handle Spirit Bond pet multipliers override
+  const petMultipliers = modifiers.topPetBonusMultiplier ? [1.0, 0.7, modifiers.topPetBonusMultiplier] : undefined;
+
+  // Compute truth via Service!
+  const combatStats = computeCombatStats(pipedUser, equippedItems, equippedPets, tempBuffs, petMultipliers);
+
+  const enemyStrengthMultiplier = modifiers.enemyStrengthMultiplier ?? 1;
+
+  const baseLvl = user.level;
+  const lvl = Math.max(1, baseLvl - randomInt(0, 2));
+  const isNewbie = lvl < 5;
+  const enemyMaxHp = (50 + (lvl * 15)) * enemyStrengthMultiplier * (isNewbie ? 0.7 : 1);
+  const enemyName = `Quái thú cấp ${lvl}${isNewbie ? " (Yếu)" : ""}`;
+
   const displayedLogs: string[] = [];
 
-  const pushLog = async (newLogs: string[]) => {
-    displayedLogs.push(...newLogs);
-    battleLogs.push(...newLogs);
-    const fullLog = displayedLogs.join("\n");
-    const textToDisplay = fullLog.length > 3500 ? "..." + fullLog.substring(fullLog.length - 3500) : fullLog;
-    
-    const embed = new EmbedBuilder()
-      .setColor(0x3498db)
-      .setTitle("⚔️ Đang chiến đấu...")
-      .setDescription(textToDisplay);
-      
-    try {
-      if (interaction) await interaction.editReply({ embeds: [embed], components: [] });
-    } catch (e) {
-      console.error("Progressive log edit failed", e);
+  // 2. RUN ENGINE
+  const engineResult: EngineResult = await simulateCombat({
+    player: {
+      hp: user.currentHp,
+      maxHp: combatStats.final.maxHp,
+      atk: combatStats.final.attack,
+      def: combatStats.final.defense,
+      spd: combatStats.final.speed,
+      critRate: (effectiveLuck * 0.005) + (combatStats.extra?.critRateBonus || 0),
+      pets: equippedPets,
+      skills: user.skills.filter((s: any) => s.isEquipped),
+      title: user.title
+    },
+    enemy: {
+      name: enemyName,
+      hp: enemyMaxHp,
+      maxHp: enemyMaxHp,
+      atk: (5 + (lvl * 4)) * enemyStrengthMultiplier,
+      def: (2 + (lvl * 2)) * enemyStrengthMultiplier,
+      spd: (5 + (lvl * 2)) * enemyStrengthMultiplier,
+      isBoss: modifiers.isBoss ?? false
+    },
+    accessories: {
+      effects: combatStats.extra?.activeUniqueEffects || [],
+      uniquePowers: (combatStats.extra as any)?.uniquePowers || {},
+      sets: combatStats.extra?.activeSets || []
+    },
+    onTurnUpdate: async (state) => {
+      displayedLogs.push(...state.logs);
+      const logText = displayedLogs.slice(-8).join("\n");
+      const playerBar = buildHpBar(state.playerHp, user.maxHp, 8);
+      const enemyBar = buildHpBar(state.enemyHp, Math.floor(enemyMaxHp), 8);
+
+      const embed = new EmbedBuilder()
+        .setColor(0x3498db)
+        .setTitle("⚔️ Đang đi săn...")
+        .setDescription(`👩 **Bạn:** ${playerBar}\n👹 **${enemyName}:** ${enemyBar}\n\n${logText}`);
+
+      try {
+        if (interaction) await interaction.editReply({ embeds: [embed] });
+        await new Promise(resolve => setTimeout(resolve, 800)); // Sleep between turns for visibility
+      } catch (e) { }
     }
-  };
+  });
 
-  await pushLog([`⚔️ **${enemyName} xuất hiện!** (HP: ${enemyMaxHp})`]);
-
-  while (turn <= 20 && ctx.player.hp > 0 && ctx.enemy.hp > 0) {
-    const turnLogs: string[] = [];
-    turnLogs.push(`\n**[Lượt ${turn}]**`);
-    
-    // ON_TURN_START skills
-    const turnStartSkills = applySkills(equippedSkills, "ON_TURN_START", ctx);
-    if (turnStartSkills.length > 0) {
-      turnLogs.push(`🌟 Kỹ năng đầu lượt kích hoạt: ${turnStartSkills.join(", ")}`);
-      // Since it's turn start, we can apply heal now if generated
-      if (ctx.extra.heal > 0) {
-        ctx.player.hp += Math.floor(ctx.extra.heal);
-        ctx.player.hp = Math.min(ctx.player.hp, user.maxHp);
-        turnLogs.push(`💚 Bạn hồi phục ${Math.floor(ctx.extra.heal)} HP.`);
-        ctx.extra.heal = 0; // reset after applying
-      }
-      if (ctx.extra.bonusDamage > 0) {
-        ctx.enemy.hp -= Math.floor(ctx.extra.bonusDamage);
-        turnLogs.push(`🔥 Quái thú bị thiêu đốt chịu ${Math.floor(ctx.extra.bonusDamage)} sát thương. (HP quái: ${Math.max(0, ctx.enemy.hp)})`);
-        ctx.extra.bonusDamage = 0; // reset after applying
-      }
-    }
-
-    if (ctx.enemy.hp <= 0) break;
-
-    // SPD determines who hits first
-    const participants = ctx.player.spd >= ctx.enemy.spd 
-      ? [{ name: "Player", side: "user" }, { name: enemyName, side: "enemy" }]
-      : [{ name: enemyName, side: "enemy" }, { name: "Player", side: "user" }];
-
-    for (const p of participants) {
-      if (ctx.player.hp <= 0 || ctx.enemy.hp <= 0) break;
-
-      // 1. Before attack: reset
-      ctx.flags.dodged = false;
-      ctx.flags.ignoreDef = false;
-      ctx.flags.extraHit = false;
-      ctx.multipliers.damage = playerDamageMultiplier;
-      ctx.extra.bonusDamage = 0;
-      ctx.extra.heal = 0;
-      ctx.extra.reduceDamage = 0;
-
-      let activatedSkills: string[] = [];
-
-      // 2. Apply skill effects by timing
-      if (p.side === "user") {
-        activatedSkills = applySkills(equippedSkills, "ON_ATTACK", ctx);
-      } else {
-        activatedSkills = applySkills(equippedSkills, "ON_DEFEND", ctx);
-      }
-
-      const skillsStr = activatedSkills.length > 0 ? ` (kỹ năng: **${activatedSkills.join(", ")}**)` : "";
-
-      // 3. If dodged: skip damage
-      if (ctx.flags.dodged) {
-        if (p.side === "enemy") {
-          turnLogs.push(`🔸 **${enemyName}** tấn công nhưng bạn đã né được!${skillsStr}`);
-        } else {
-          turnLogs.push(`🔹 Bạn tấn công nhưng bị né!${skillsStr}`);
-        }
-      } else {
-        // 4. Apply damage
-        if (p.side === "user") {
-          const isCrit = Math.random() < ctx.player.critRate;
-          const baseDamage = ctx.player.atk * (isCrit ? 1.5 : 1.0) * ctx.multipliers.damage;
-          
-          const enemyDef = ctx.flags.ignoreDef ? 0 : ctx.enemy.def;
-          let hitDamage = Math.max(1, Math.floor(baseDamage - enemyDef));
-          
-          const hits = ctx.flags.extraHit ? 2 : 1;
-          const totalDamage = hitDamage * hits + Math.floor(ctx.extra.bonusDamage);
-          
-          ctx.enemy.hp -= totalDamage;
-          const critText = isCrit ? "💥 **ĐÁNH CHÍ MẠNG!** " : "";
-          const extraText = ctx.flags.extraHit ? " (Đánh bồi!)" : "";
-          turnLogs.push(`🔹 Bạn tấn công${skillsStr} gây ${critText}${totalDamage} sát thương${extraText}. (HP quái: ${Math.max(0, ctx.enemy.hp)})`);
-        } else {
-          // Enemy's turn
-          let damage = Math.max(1, ctx.enemy.atk - ctx.player.def);
-          if (ctx.extra.reduceDamage > 0) {
-            const reduction = Math.min(0.9, ctx.extra.reduceDamage);
-            damage = damage * (1 - reduction);
-          }
-          damage = Math.floor(damage);
-
-          ctx.player.hp -= damage;
-          turnLogs.push(`🔸 **${enemyName}** đánh trúng bạn gây ${damage} sát thương. (HP của bạn: ${Math.max(0, ctx.player.hp)})`);
-        }
-      }
-
-      // 5. After attack: apply heal
-      if (ctx.extra.heal > 0) {
-        ctx.player.hp += Math.floor(ctx.extra.heal);
-        ctx.player.hp = Math.min(ctx.player.hp, user.maxHp);
-        turnLogs.push(`💚 Bạn hồi phục ${Math.floor(ctx.extra.heal)} HP.`);
-      }
-    }
-    
-    await pushLog(turnLogs);
-    if (ctx.player.hp > 0 && ctx.enemy.hp > 0) {
-      await sleep(800); // progressive update per turn
-    }
-    turn++;
-  }
-
-  const finalLogs: string[] = [];
-  isWin = ctx.enemy.hp <= 0;
-  if (!isWin && ctx.player.hp > 0) {
-    finalLogs.push("\n⏳ **Trận đấu kết thúc hòa!** (Đã chạm giới hạn 20 lượt)");
-  }
-
-  // 4. Rewards & Stats
+  // 3. Post-Combat Logic
+  const isWin = engineResult.isWin;
+  const newbieRewardMult = user.level < 5 ? 2 : 1;
   const goldGainedBase = isWin ? randomInt(20, 50) + (lvl * 10) : 0;
   const expGainedBase = isWin ? 10 + (lvl * 5) : 0;
-  const goldGained = Math.max(0, Math.floor(goldGainedBase * ctx.multipliers.gold));
-  const expGained = Math.max(0, Math.floor(expGainedBase * ctx.multipliers.exp));
-  const hpLost = user.currentHp - ctx.player.hp;
+  const goldTitleMult = getTitleGoldMultiplier(user.title);
+  const goldGained = Math.floor(goldGainedBase * (modifiers.goldMultiplier ?? 1) * newbieRewardMult * goldTitleMult);
+  const expGained = Math.floor(expGainedBase * (modifiers.expMultiplier ?? 1) * newbieRewardMult);
 
-  let hospitalUntil: Date | undefined;
-  if (ctx.player.hp <= 0) {
-    ctx.player.hp = 0;
-    hospitalUntil = new Date(Date.now() + 30 * 60 * 1000); // 30 mins
-    finalLogs.push("\n🚑 **Bạn gục ngã và được đưa đến bệnh viện!**");
+  let hospitalUntil: Date | null = null;
+  if (engineResult.finalHp <= 0) {
+    hospitalUntil = new Date(Date.now() + 30 * 60 * 1000);
   }
 
-  if (finalLogs.length > 0) {
-    await pushLog(finalLogs);
-    await sleep(400); // mini buffer before rendering the final result
-  }
+  let levelsGained = 0;
+  let finalStats: any = null;
 
-  // 5. Update Database
-  const result: BattleResult = {
-    isWin,
-    enemyName,
-    battleLogs,
-    goldGained,
-    expGained,
-    hpLost,
-    hospitalUntil,
-    finalHp: ctx.player.hp
-  };
+  // 4. DB UPDATES
+  const battleLogsStr = engineResult.fullLogs.flatMap((l: any) => l.events).join("\n");
+
+  let updatedAchievements: any[] = [];
 
   await prisma.$transaction(async (tx) => {
     const updatedUser = await tx.user.update({
@@ -318,50 +172,322 @@ export async function handleHunt(
       data: {
         gold: { increment: goldGained },
         exp: { increment: expGained },
-        currentHp: ctx.player.hp,
-        hospitalUntil: hospitalUntil || null
+        currentHp: engineResult.finalHp,
+        hospitalUntil: hospitalUntil
       }
     });
 
-    // Check for level up
     const levelUpData = applyLevelUps({
-      level: updatedUser.level,
-      exp: updatedUser.exp,
-      str: updatedUser.str,
-      agi: updatedUser.agi,
-      luck: updatedUser.luck,
-      hp: updatedUser.currentHp,
-      maxHp: updatedUser.maxHp
+      level: updatedUser.level, exp: updatedUser.exp, str: updatedUser.str, agi: updatedUser.agi, luck: updatedUser.luck, currentHp: updatedUser.currentHp, maxHp: updatedUser.maxHp
     });
 
     if (levelUpData.levelsGained > 0) {
-      await tx.user.update({
+      levelsGained = levelUpData.levelsGained;
+      const leveledUser = await tx.user.update({
         where: { id: userId },
         data: {
-          level: levelUpData.updated.level,
-          exp: levelUpData.updated.exp,
-          str: levelUpData.updated.str,
-          agi: levelUpData.updated.agi,
-          luck: levelUpData.updated.luck,
-          maxHp: levelUpData.updated.maxHp,
-          currentHp: levelUpData.updated.maxHp // Full heal on level up
+          level: levelUpData.updated.level, exp: levelUpData.updated.exp, str: levelUpData.updated.str,
+          agi: levelUpData.updated.agi, luck: levelUpData.updated.luck, maxHp: levelUpData.updated.maxHp, currentHp: levelUpData.updated.maxHp
         }
       });
-      battleLogs.push(`\n🎊 **LÊN CẤP!** Bạn đã lên cấp ${levelUpData.updated.level}!`);
+      finalStats = leveledUser;
     }
 
-    // Save Combat Log
     await tx.combatLog.create({
       data: {
-        userId,
-        enemyName,
-        isWin,
-        logDetails: battleLogs.join("\n"),
-        goldGained,
-        expGained
+        userId, enemyName, isWin, goldGained, expGained,
+        logDetails: battleLogsStr.substring(0, 5000)
       }
     });
+
+    const pushUpdates = async (prefix: string, amount: number, isSet: boolean = false) => {
+      const res = await updateAchievementProgress(userId, prefix, amount, isSet, tx);
+      updatedAchievements.push(...res);
+    };
+
+    if (isWin) {
+      await updateQuestProgress(userId, "kill_beast", 1, false, tx);
+      await pushUpdates("hunt", 1, false);
+      await pushUpdates("slayer", 1, false);
+      if (modifiers.isBoss) await pushUpdates("boss", 1, false);
+      if (engineResult.finalHp < combatStats.final.maxHp * 0.2) await pushUpdates("survive", 1, false);
+    }
+
+    if (goldGained > 0) await pushUpdates("gold", goldGained, false);
+
+    // Tracking from engine
+    const track = engineResult.achievementTracking;
+    if (track) {
+      if (track.crits > 0) await pushUpdates("crit", track.crits, false);
+      if (track.burns > 0) await pushUpdates("burn", track.burns, false);
+      if (track.poisons > 0) await pushUpdates("poison", track.poisons, false);
+      if (track.lifesteals > 0) await pushUpdates("lifesteal", track.lifesteals, false);
+      if (track.combos > 0) await pushUpdates("combo", track.combos, false);
+    }
+
+    if (user.beasts && user.beasts.length > 0) {
+      await pushUpdates("pet", user.beasts.length, true);
+      const legendaryCount = user.beasts.filter((b: any) => b.rarity === "LEGENDARY").length;
+      await pushUpdates("petlegendary", legendaryCount, true);
+    }
+
+    // ─── PET EXP GAIN ───
+    if (engineResult.combatSummary.petExpPool) {
+      for (const [petId, amount] of engineResult.combatSummary.petExpPool.entries()) {
+        const res = await addPetExp(petId, amount, tx);
+        if (res && res.leveledUp) {
+          const pet = user.beasts.find((b: any) => b.id === petId);
+          if (pet) displayedLogs.push(`🎊 **${pet.name}** đã thăng lên **Cấp ${res.newLevel}**!`);
+        }
+      }
+    }
   });
 
-  return result;
+  const notifications = buildAchievementNotifications(updatedAchievements);
+  const formattedProgress = formatAchievementProgress(updatedAchievements);
+
+  return {
+    isWin,
+    enemyName,
+    battleLogs: engineResult.fullLogs.flatMap((l: any) => l.events),
+    goldGained,
+    expGained,
+    hpLost: user.currentHp - engineResult.finalHp,
+    hospitalUntil: hospitalUntil || undefined,
+    finalHp: engineResult.finalHp,
+    playerMaxHp: combatStats.final.maxHp,
+    finalEnemyHp: engineResult.finalEnemyHp,
+    enemyMaxHp: engineResult.enemyMaxHp,
+    levelsGained,
+    newStats: finalStats,
+    combatSummary: engineResult.combatSummary,
+    achievementData: {
+      updatedAchievements,
+      completedAchievements: notifications.completedAchievements,
+      notificationSent: notifications.notificationSent,
+      embedPayload: notifications.embedPayload,
+      formattedProgress
+    }
+  };
+}
+
+export async function handleAutoHunt(
+  userId: string,
+  potionCount: number = 0
+) {
+  const user = await getUserWithRelations(userId);
+  if (!user) throw new Error("Không tìm thấy người chơi.");
+
+  if (user.hospitalUntil && user.hospitalUntil > new Date()) {
+    throw new Error("Bạn vẫn đang hồi phục ở bệnh viện.");
+  }
+  if (user.currentHp <= 0) {
+    throw new Error("Bạn không còn HP! Hãy đợi hồi phục hoặc dùng vật phẩm.");
+  }
+
+  // 1. Prepare Stats
+  const equippedItems = user.inventory.filter((i: any) => i.isEquipped);
+  const equippedPets = user.beasts.filter((b: any) => b.isEquipped);
+  const combatStats = computeCombatStats(user, equippedItems, equippedPets);
+
+  const maxFights = 20;
+  let currentHp = user.currentHp;
+  const potionItemOwned = user.inventory.find((i: any) => i.name === "Potion");
+  let potionLeft = Math.min(potionCount, (potionItemOwned?.quantity || 0));
+  const initialPotions = potionLeft;
+
+  let totalGold = 0;
+  let totalExp = 0;
+  let totalKills = 0;
+  let totalTurns = 0;
+  const combatLogs: string[] = [];
+
+  // Tracking for bulk updates
+  const tracking = {
+    crits: 0,
+    burns: 0,
+    poisons: 0,
+    lifesteals: 0,
+    combos: 0,
+    petExpPool: new Map<string, number>()
+  };
+
+  let currentUserState = {
+    level: user.level,
+    exp: user.exp,
+    str: user.str,
+    agi: user.agi,
+    luck: user.luck,
+    maxHp: user.maxHp
+  };
+
+  for (let i = 0; i < maxFights; i++) {
+    // A. Generate Monster
+    const lvl = Math.max(1, currentUserState.level + randomInt(1, 3));
+    const isNewbie = lvl < 5;
+    const enemyMaxHp = (50 + (lvl * 15)) * (isNewbie ? 0.7 : 1);
+    const enemyName = `Quái thú cấp ${lvl}`;
+
+    // B. Simulate Combat
+    const engineResult = await simulateCombat({
+      player: {
+        hp: currentHp,
+        maxHp: currentUserState.maxHp,
+        atk: combatStats.final.attack,
+        def: combatStats.final.defense,
+        spd: combatStats.final.speed,
+        critRate: (currentUserState.luck * 0.005) + (combatStats.extra?.critRateBonus || 0),
+        pets: equippedPets,
+        skills: user.skills.filter((s: any) => s.isEquipped),
+        title: user.title
+      },
+      enemy: {
+        name: enemyName,
+        hp: enemyMaxHp,
+        maxHp: enemyMaxHp,
+        atk: 5 + (lvl * 4),
+        def: 2 + (lvl * 2),
+        spd: 5 + (lvl * 2)
+      },
+      accessories: {
+        effects: combatStats.extra?.activeUniqueEffects || [],
+        uniquePowers: (combatStats.extra as any)?.uniquePowers || {},
+        sets: combatStats.extra?.activeSets || []
+      }
+    });
+
+    // C. Results Logic
+    const isWin = engineResult.isWin;
+    const turns = engineResult.fullLogs.length;
+    currentHp = engineResult.finalHp;
+
+    if (isWin) {
+      const goldTitleMult = getTitleGoldMultiplier(user.title);
+      const newbieRewardMult = currentUserState.level < 5 ? 2 : 1;
+      const g = Math.floor((randomInt(20, 50) + (lvl * 10)) * newbieRewardMult * goldTitleMult);
+      const e = Math.floor((10 + (lvl * 5)) * newbieRewardMult);
+
+      totalGold += g;
+      totalExp += e;
+      totalKills++;
+      totalTurns += turns;
+
+      if (combatLogs.length < 10) {
+        combatLogs.push(`🐺 ${enemyName} - ${turns} lượt → +${e} EXP, +${g} vàng`);
+      }
+
+      if (engineResult.achievementTracking) {
+        tracking.crits += engineResult.achievementTracking.crits;
+        tracking.burns += engineResult.achievementTracking.burns;
+        tracking.poisons += engineResult.achievementTracking.poisons;
+        tracking.lifesteals += engineResult.achievementTracking.lifesteals;
+        tracking.combos += engineResult.achievementTracking.combos;
+
+        if (engineResult.combatSummary.petExpPool) {
+          for (const [pid, amt] of engineResult.combatSummary.petExpPool.entries()) {
+            tracking.petExpPool.set(pid, (tracking.petExpPool.get(pid) || 0) + amt);
+          }
+        }
+      }
+
+      const lvlData = applyLevelUps({ ...currentUserState, currentHp, exp: currentUserState.exp + e });
+      if (lvlData.levelsGained > 0) {
+        currentUserState = { ...lvlData.updated };
+        currentHp = currentUserState.maxHp;
+      } else {
+        currentUserState.exp += e;
+      }
+    } else {
+      // Lost or tied
+      break;
+    }
+
+    // D. Auto Potion Logic
+    if (currentHp <= currentUserState.maxHp * 0.3) {
+      if (potionLeft > 0) {
+        currentHp = Math.min(currentUserState.maxHp, currentHp + 50);
+        potionLeft--;
+      } else {
+        break;
+      }
+    }
+
+    if (currentHp <= 0) break;
+  }
+
+  let updatedAchievements: any[] = [];
+  await prisma.$transaction(async (tx) => {
+    if (initialPotions - potionLeft > 0 && potionItemOwned) {
+      if (potionItemOwned.quantity <= (initialPotions - potionLeft)) {
+        await tx.item.delete({ where: { id: potionItemOwned.id } });
+      } else {
+        await tx.item.update({
+          where: { id: potionItemOwned.id },
+          data: { quantity: { decrement: (initialPotions - potionLeft) } }
+        });
+      }
+    }
+
+    await tx.user.update({
+      where: { id: userId },
+      data: {
+        gold: { increment: totalGold },
+        exp: currentUserState.exp,
+        level: currentUserState.level,
+        str: currentUserState.str,
+        agi: currentUserState.agi,
+        luck: currentUserState.luck,
+        maxHp: currentUserState.maxHp,
+        currentHp: currentHp,
+        hospitalUntil: currentHp <= 0 ? new Date(Date.now() + 30 * 60 * 1000) : null
+      }
+    });
+
+    const pushUpdates = async (prefix: string, amount: number, isSet: boolean = false) => {
+      const res = await updateAchievementProgress(userId, prefix, amount, isSet, tx);
+      updatedAchievements.push(...res);
+    };
+
+    if (totalKills > 0) {
+      await updateQuestProgress(userId, "kill_beast", totalKills, false, tx);
+      await pushUpdates("hunt", totalKills, false);
+      await pushUpdates("slayer", totalKills, false);
+    }
+    if (totalGold > 0) await pushUpdates("gold", totalGold, false);
+    if (tracking.crits > 0) await pushUpdates("crit", tracking.crits, false);
+    if (tracking.burns > 0) await pushUpdates("burn", tracking.burns, false);
+    if (tracking.poisons > 0) await pushUpdates("poison", tracking.poisons, false);
+    if (tracking.lifesteals > 0) await pushUpdates("lifesteal", tracking.lifesteals, false);
+    if (tracking.combos > 0) await pushUpdates("combo", tracking.combos, false);
+
+    if (user.beasts?.length > 0) {
+      await pushUpdates("pet", user.beasts.length, true);
+      const legendaryCount = user.beasts.filter((b: any) => b.rarity === "LEGENDARY").length;
+      await pushUpdates("petlegendary", legendaryCount, true);
+    }
+
+    // ─── PET EXP GAIN (Auto Hunt) ───
+    for (const [petId, amount] of tracking.petExpPool.entries()) {
+      const res = await addPetExp(petId, amount, tx);
+      if (res && res.leveledUp) {
+        const pet = user.beasts.find((b: any) => b.id === petId);
+        if (pet) combatLogs.push(`🎊 **${pet.name}** đã thăng lên **Cấp ${res.newLevel}**!`);
+      }
+    }
+  });
+
+  const notifications = buildAchievementNotifications(updatedAchievements);
+
+  return {
+    totalKills,
+    totalGold,
+    totalExp,
+    potionsUsed: initialPotions - potionLeft,
+    logs: combatLogs,
+    achievements: notifications.completedAchievements,
+    finalHp: currentHp,
+    maxHp: currentUserState.maxHp,
+    newLevel: currentUserState.level,
+    levelsGained: currentUserState.level - user.level
+  };
 }

@@ -4,13 +4,14 @@ import {
   ButtonStyle,
   EmbedBuilder,
   SlashCommandBuilder,
-  type ButtonInteraction
+  type ButtonInteraction,
+  type AutocompleteInteraction
 } from "discord.js";
 
 import { ItemType } from "@prisma/client";
 
 import { CAPTURE_TIMEOUT_MS, EVENT_RATES, HUNT_COOLDOWN_MS } from "../constants/config";
-import { RARITY_COLORS, RARITY_BADGE, type Rarity } from "../utils/rpg-ui";
+import { RARITY_COLORS, RARITY_BADGE, type Rarity, buildHpBar } from "../utils/rpg-ui";
 import { createHuntPreviewToken, consumeHuntPreview, type HuntPreviewBranch } from "../services/pending-hunt-preview";
 import {
   buildBeastButtons,
@@ -24,37 +25,45 @@ import { prisma } from "../services/prisma";
 import { updateQuestProgress } from "../services/quest-service";
 import { randomInt } from "../services/rng";
 import { formatDuration, getRemainingCooldown, getUser, getUserWithRelations, upsertItem } from "../services/user-service";
+import { autoFuseBeasts } from "../services/beast-service";
 import type { SlashCommand } from "../types/command";
 import { checkUserStatusErrors, performCoreHunt } from "../services/hunt-core";
+import { handleAutoHunt } from "../services/combat-system";
 
 export const huntCommand: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName("hunt")
     .setDescription("Đi săn quái thú, tìm chiến lợi phẩm hoặc gặp thú mới.")
-    .addIntegerOption(option =>
-      option
-        .setName("traps")
-        .setDescription("Số lượng Hunter Traps để dùng (tối đa 10)")
-        .setMinValue(0)
-        .setMaxValue(10)
+    .addSubcommand(sub =>
+      sub
+        .setName("manual")
+        .setDescription("Đi săn thủ công (có cơ hội bắt pet, nhặt rương)")
+        .addStringOption(option =>
+          option.setName("traps").setDescription("Chọn bẫy (1-10)").setAutocomplete(true)
+        )
+        .addStringOption(option =>
+          option.setName("clovers").setDescription("Chọn cỏ may mắn (1-10)").setAutocomplete(true)
+        )
+        .addIntegerOption(option =>
+          option.setName("scouts").setDescription("Scout Lens (0-1)").setAutocomplete(true)
+        )
     )
-    .addIntegerOption(option =>
-      option
-        .setName("clovers")
-        .setDescription("Số lượng Lucky Clovers để dùng (tối đa 10)")
-        .setMinValue(0)
-        .setMaxValue(10)
-    )
-    .addIntegerOption(option =>
-      option
-        .setName("scouts")
-        .setDescription("Số lượng Scout Lens để dùng cho dự báo (tối đa 1)")
-        .setMinValue(0)
-        .setMaxValue(1)
+    .addSubcommand(sub =>
+      sub
+        .setName("auto")
+        .setDescription("Tự động đi săn liên tục để cày EXP và Vàng")
+        .addIntegerOption(option =>
+          option.setName("potions")
+            .setDescription("Số lượng Potion tối đa muốn dùng (0-50)")
+            .setMinValue(0)
+            .setMaxValue(50)
+            .setRequired(false)
+        )
     ) as any,
   async execute(interaction) {
     try {
       await interaction.deferReply();
+      const subcommand = interaction.options.getSubcommand();
       const now = new Date();
       const user = await getUserWithRelations(interaction.user.id);
 
@@ -71,19 +80,56 @@ export const huntCommand: SlashCommand = {
         return;
       }
 
-      // @ts-ignore
-      const trapsWanted = (interaction.options.getInteger('traps') ?? 0) as number;
-      // @ts-ignore 
-      const cloversWanted = (interaction.options.getInteger('clovers') ?? 0) as number;
-      // @ts-ignore
-      const scoutsWanted = (interaction.options.getInteger("scouts") ?? 0) as number;
+      if (subcommand === "auto") {
+        const potionsToUse = interaction.options.getInteger("potions") || 0;
+        const result = await handleAutoHunt(user.id, potionsToUse);
 
-      const userTrapObj = user.inventory.find((i: any) => i.type === ItemType.TRAP);
-      const trapsOwned = userTrapObj?.quantity ?? 0;
+        const summaryEmbed = new EmbedBuilder()
+          .setColor(0x2ecc71)
+          .setTitle("⚔️ Tổng kết Đi Săn Tự Động")
+          .setDescription(`Bạn đã càn quét khu rừng và thu được kết quả sau:`)
+          .addFields(
+            { name: "💀 Kẻ địch hạ gục", value: `\`${result.totalKills}\``, inline: true },
+            { name: "🌟 EXP nhận được", value: `\`+${result.totalExp}\``, inline: true },
+            { name: "💰 Vàng thu thập", value: `\`+${result.totalGold}\``, inline: true },
+            { name: "🧪 Potion đã dùng", value: `\`${result.potionsUsed}\``, inline: true },
+            { name: "❤️ HP Cuối", value: `${buildHpBar(result.finalHp, result.maxHp, 8)} (\`${result.finalHp.toFixed(0)}\`/${result.maxHp})`, inline: true },
+            { name: "📊 Nhật ký chiến đấu (Tóm tắt)", value: result.logs.join("\n") || "Không có nhật ký." }
+          );
 
-      const userCloverObj = user.inventory.find((i: any) => i.type === ItemType.LUCK_BUFF);
-      const cloversOwned = userCloverObj?.quantity ?? 0;
-      const cloverPower = userCloverObj?.power ?? 1;
+        if (result.levelsGained > 0) {
+            summaryEmbed.addFields({ name: "🆙 CẤP ĐỘ MỚI!", value: `Bạn đã thăng lên cấp **${result.newLevel}**! (+${result.levelsGained})` });
+        }
+
+        if (result.achievements && result.achievements.length > 0) {
+            summaryEmbed.addFields({ name: "🏆 Thành tựu mới", value: result.achievements.map((a: any) => `✅ **${a.name}**`).join("\n") });
+        }
+
+        await interaction.editReply({ embeds: [summaryEmbed] });
+        return;
+      }
+
+      // Manual hunt logic
+      const trapInput = interaction.options.getString("traps") || "";
+      const cloverInput = interaction.options.getString("clovers") || "";
+      const scoutsWanted = interaction.options.getInteger("scouts") || 0;
+
+      // Parsing "Item Name:Qty"
+      let trapsWanted = 0;
+      let trapItemName = "";
+      if (trapInput.includes(":")) {
+        const parts = trapInput.split(":");
+        trapItemName = parts[0]!;
+        trapsWanted = parseInt(parts[1]!) || 0;
+      }
+
+      let cloversWanted = 0;
+      let cloverItemName = "";
+      if (cloverInput.includes(":")) {
+        const parts = cloverInput.split(":");
+        cloverItemName = parts[0]!;
+        cloversWanted = parseInt(parts[1]!) || 0;
+      }
 
       const scoutLensObj = user.inventory.find((i: any) => i.name === "Scout Lens");
       const scoutsOwned = scoutLensObj?.quantity ?? 0;
@@ -97,16 +143,6 @@ export const huntCommand: SlashCommand = {
         return;
       }
 
-      if (trapsWanted > trapsOwned) {
-        await interaction.editReply({ content: `Bạn không đủ Hunter Traps! (Bạn có ${trapsOwned})` });
-        return;
-      }
-
-      if (cloversWanted > cloversOwned) {
-        await interaction.editReply({ content: `Bạn không đủ Lucky Clovers! (Bạn có ${cloversOwned})` });
-        return;
-      }
-
       const cooldown = getRemainingCooldown(user.lastHunt, HUNT_COOLDOWN_MS, now);
       if (cooldown > 0) {
         await interaction.editReply({
@@ -114,6 +150,11 @@ export const huntCommand: SlashCommand = {
         });
         return;
       }
+
+      const userCloverObj = cloverItemName 
+        ? user.inventory.find((i: any) => i.name === cloverItemName) 
+        : user.inventory.find((i: any) => i.type === ItemType.LUCK_BUFF);
+      const cloverPower = userCloverObj?.power ?? 1;
 
       if (scoutsWanted > 0) {
         const cloverLuck = cloversWanted * cloverPower;
@@ -143,7 +184,9 @@ export const huntCommand: SlashCommand = {
         const token = createHuntPreviewToken({
           userId: user.id,
           trapsWanted,
+          trapItemName,
           cloversWanted,
+          cloverItemName,
           scoutLensToUse: 1,
           forcedEventRoll,
           predictedBranch,
@@ -174,7 +217,9 @@ export const huntCommand: SlashCommand = {
 
       await performCoreHunt(interaction, user, now, {
         trapsWanted,
+        trapItemName,
         cloversWanted,
+        cloverItemName,
         scoutLensToUse: 0
       });
     } catch (error) {
@@ -192,11 +237,13 @@ async function executeHuntAfterScoutConfirm(params: {
   interaction: any;
   userId: string;
   trapsWanted: number;
+  trapItemName: string | undefined;
   cloversWanted: number;
+  cloverItemName: string | undefined;
   scoutLensToUse: number;
   forcedEventRoll: number;
 }): Promise<void> {
-  const { interaction, userId, trapsWanted, cloversWanted, scoutLensToUse, forcedEventRoll } = params;
+  const { interaction, userId, trapsWanted, trapItemName, cloversWanted, cloverItemName, scoutLensToUse, forcedEventRoll } = params;
 
   try {
     if (!interaction.deferred && !interaction.replied) {
@@ -241,7 +288,9 @@ async function executeHuntAfterScoutConfirm(params: {
 
     await performCoreHunt(interaction, user, now, {
       trapsWanted,
+      trapItemName,
       cloversWanted,
+      cloverItemName,
       scoutLensToUse,
       forcedEventRoll
     });
@@ -314,7 +363,9 @@ export async function handleButtonInteraction(interaction: ButtonInteraction): P
       interaction,
       userId: preview.userId,
       trapsWanted: preview.trapsWanted,
+      trapItemName: preview.trapItemName,
       cloversWanted: preview.cloversWanted,
+      cloverItemName: preview.cloverItemName,
       scoutLensToUse: preview.scoutLensToUse ?? 0,
       forcedEventRoll: preview.forcedEventRoll
     });
@@ -398,13 +449,47 @@ export async function handleButtonInteraction(interaction: ButtonInteraction): P
       } else {
         const roll = agiForRoll + randomInt(0, 10);
         if (roll > 15) {
-          const trapWin = randomInt(1, 3);
+          const goldMultiplier = preview.goldMultiplier ?? 1;
+          const finalGold = Math.floor(randomInt(50, 150) * goldMultiplier);
+          const potionWin = randomInt(1, 3);
+
+          let skillWon: any = null;
+          if (Math.random() < 0.05) {
+            const allSkills = await prisma.skill.findMany();
+            if (allSkills.length > 0) {
+              skillWon = allSkills[randomInt(0, allSkills.length - 1)];
+            }
+          }
+
           await prisma.$transaction(async (tx) => {
-            await upsertItem(tx, user.id, { name: "Hunter Trap", type: ItemType.TRAP, power: 1, quantity: trapWin });
-            await tx.user.update({ where: { id: user.id }, data: { isBusy: false, busyUntil: null } });
+            await tx.user.update({
+              where: { id: user.id },
+              data: {
+                gold: { increment: finalGold },
+                isBusy: false,
+                busyUntil: null
+              }
+            });
+            await upsertItem(tx, user.id, { name: "Potion", type: ItemType.POTION, power: 50, quantity: potionWin });
+            if (skillWon) {
+              await tx.userSkill.upsert({
+                where: { userId_skillId: { userId: user.id, skillId: skillWon.id } },
+                create: { userId: user.id, skillId: skillWon.id, isEquipped: false },
+                update: {}
+              });
+            }
           });
+
           await updateQuestProgress(user.id, "open_chest", 1);
-          embed.setColor(0x2ecc71).setTitle("Vô hiệu hóa rương thành công!").setDescription(`Bạn nhẹ nhàng mở rương và tìm thấy **${trapWin} Hunter Traps**!`);
+
+          let rewardTxt = `💰 **${finalGold} vàng**\n🧪 **${potionWin} Potion**`;
+          if (skillWon) {
+            rewardTxt += `\n📜 **Kỹ năng mới: ${skillWon.name}**`;
+          }
+
+          embed.setColor(0x2ecc71)
+            .setTitle("Vô hiệu hóa rương thành công!")
+            .setDescription(`Bạn nhẹ nhàng mở rương và tìm thấy:\n${rewardTxt}`);
         } else {
           const damage = randomInt(15, 30);
           const currentHp = Math.max(1, user.currentHp - damage);
@@ -496,9 +581,16 @@ export async function handleButtonInteraction(interaction: ButtonInteraction): P
               name: encounter.beast.name,
               rarity: encounter.beast.rarity,
               power: encounter.beast.power,
-              ownerId: interaction.user.id
+              role: encounter.beast.role ?? null,
+              skillType: encounter.beast.skillType ?? null,
+              skillPower: encounter.beast.skillPower ?? null,
+              trigger: encounter.beast.trigger ?? null,
+              ownerId: interaction.user.id,
+              upgradeLevel: 0
             }
           });
+
+          await autoFuseBeasts(interaction.user.id, encounter.beast.name, 0, tx);
         }
         
         await tx.user.update({
@@ -547,4 +639,59 @@ export async function handleButtonInteraction(interaction: ButtonInteraction): P
   }
 
   return true;
+}
+
+export async function handleHuntAutocomplete(interaction: AutocompleteInteraction): Promise<void> {
+  const userId = interaction.user.id;
+  const user = await getUserWithRelations(userId);
+  if (!user) {
+    await interaction.respond([]);
+    return;
+  }
+
+  const focusedOption = interaction.options.getFocused(true);
+
+  if (focusedOption.name === "traps") {
+    const trapItems = user.inventory.filter((i: any) => i.type === ItemType.TRAP);
+    const suggestions: any[] = [];
+
+    for (const item of trapItems) {
+      const owned = item.quantity;
+      const ownedCap = Math.min(owned, 10);
+      const increments = [1, 2, 5, 10].filter(n => n <= ownedCap);
+      if (ownedCap > 0 && !increments.includes(ownedCap)) increments.push(ownedCap);
+      
+      const emoji = item.name.includes("Rare") ? "🔱" : "🚀";
+      increments.sort((a,b) => a-b).forEach(c => {
+        suggestions.push({ name: `${emoji} Dùng ${c} ${item.name} (Có ${owned})`, value: `${item.name}:${c}` });
+      });
+    }
+    
+    await interaction.respond(suggestions.slice(0, 25));
+  } else if (focusedOption.name === "clovers") {
+    const cloverItems = user.inventory.filter((i: any) => i.type === ItemType.LUCK_BUFF);
+    const suggestions: any[] = [];
+
+    for (const item of cloverItems) {
+      const owned = item.quantity;
+      const ownedCap = Math.min(owned, 10);
+      const increments = [1, 2, 5, 10].filter(n => n <= ownedCap);
+      if (ownedCap > 0 && !increments.includes(ownedCap)) increments.push(ownedCap);
+
+      const emoji = item.name.includes("Four") ? "🌿" : "🍀";
+      increments.sort((a,b) => a-b).forEach(c => {
+        suggestions.push({ name: `${emoji} Dùng ${c} ${item.name} (Có ${owned})`, value: `${item.name}:${c}` });
+      });
+    }
+
+    await interaction.respond(suggestions.slice(0, 25));
+  } else if (focusedOption.name === "scouts") {
+    const item = user.inventory.find((i: any) => i.name === "Scout Lens");
+    const owned = item?.quantity ?? 0;
+    const choices = owned >= 1 ? [1] : [];
+    
+    await interaction.respond(
+      choices.map(c => ({ name: `🔍 Dùng 1 (Bạn có ${owned})`, value: c }))
+    );
+  }
 }

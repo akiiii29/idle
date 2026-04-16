@@ -1,0 +1,8 @@
+{
+  "/api/auto-hunt/[userId]/route": "app/api/auto-hunt/[userId]/route.js",
+  "/api/hospital/[userId]/route": "app/api/hospital/[userId]/route.js",
+  "/api/hospital/revive/route": "app/api/hospital/revive/route.js",
+  "/api/stats/[userId]/route": "app/api/stats/[userId]/route.js",
+  "/api/user/[id]/route": "app/api/user/[id]/route.js",
+  "/page": "app/page.js"
+}

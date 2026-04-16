@@ -1,6 +1,7 @@
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder, SlashCommandBuilder, type ButtonInteraction } from "discord.js";
 import { QuestType } from "@prisma/client";
 import { claimQuestReward, getOrCreateUserQuests } from "../services/quest-service";
+import { formatDuration } from "../services/user-service";
 import type { SlashCommand } from "../types/command";
 
 export const questCommand: SlashCommand = {
@@ -22,6 +23,9 @@ export const questCommand: SlashCommand = {
         [QuestType.ACHIEVEMENT]: [],
       };
 
+      const resetTimer: Record<string, string> = {};
+      const now = new Date();
+
       const claimableRows: ActionRowBuilder<ButtonBuilder>[] = [];
       let currentRow = new ActionRowBuilder<ButtonBuilder>();
 
@@ -30,6 +34,11 @@ export const questCommand: SlashCommand = {
         const statusStr = uq.isClaimed ? "🏆 Đã nhận" : progressStr;
         
         typesMap[uq.quest.type].push(`**${uq.quest.description}**\n> *${statusStr}*`);
+        
+        if (uq.quest.type !== QuestType.ACHIEVEMENT) {
+          const timeLeft = uq.resetAt.getTime() - now.getTime();
+          resetTimer[uq.quest.type] = formatDuration(timeLeft);
+        }
 
         if (uq.isCompleted && !uq.isClaimed) {
           if (currentRow.components.length >= 5) {
@@ -49,9 +58,14 @@ export const questCommand: SlashCommand = {
 
       for (const [type, list] of Object.entries(typesMap)) {
         if (list.length > 0) {
+          const timerSuffix = resetTimer[type] ? ` (Reset sau: ${resetTimer[type]})` : "";
+          const name = 
+            type === "DAILY" ? `📅 Hằng ngày${timerSuffix}` : 
+            type === "WEEKLY" ? `🗓️ Hằng tuần${timerSuffix}` : 
+            type === "ACHIEVEMENT" ? "🏆 Thành tựu" : `${type}`;
+            
           embed.addFields({
-            name:
-              type === "DAILY" ? "Hằng ngày" : type === "WEEKLY" ? "Hằng tuần" : type === "ACHIEVEMENT" ? "Thành tựu" : `${type}`,
+            name,
             value: list.join("\n\n"),
             inline: false
           });

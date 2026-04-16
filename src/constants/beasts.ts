@@ -1,8 +1,8 @@
 import { Rarity } from "@prisma/client";
 
 export const BEAST_LIBRARY: Record<Rarity, string[]> = {
-  [Rarity.COMMON]: ["Slime", "Rat", "Moss Turtle", "Twig Fox", "Mud Imp"],
-  [Rarity.RARE]: ["Storm Lynx", "Crystal Beetle", "Night Bat", "Ember Hound", "Iron Boar"],
-  [Rarity.EPIC]: ["Void Serpent", "Thunder Roc", "Frost Chimera", "Ash Wyrm", "Celestial Stag"],
-  [Rarity.LEGENDARY]: ["Bahamut", "Exodia", "Leviathan", "Solar Phoenix", "Eclipse Titan"]
+  [Rarity.COMMON]: ["Sói Rừng", "Cua Đá", "Nấm Độc", "Dơi Hang", "Chuột Chũi", "Chim Sẻ", "Rùa Cạn", "Bọ Hung"],
+  [Rarity.RARE]: ["Hổ Vằn", "Gấu Xám", "Cáo Tuyết", "Đại Bàng", "Rắn Hổ Mang", "Khỉ Đột", "Nai Sừng Tấm", "Cá Sấu"],
+  [Rarity.EPIC]: ["Lân Tinh", "Hỏa Ngưu", "Băng Long Con", "Phượng Hoàng Non", "Sư Tử Vàng", "Tê Giác Thép", "U Minh Miêu"],
+  [Rarity.LEGENDARY]: ["Rồng Thần", "Huyền Vũ", "Phượng Hoàng Lửa", "Bạch Hổ", "Kỳ Lân", "Thiên Bằng", "Tử Thần Khuyển"]
 };

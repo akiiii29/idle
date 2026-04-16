@@ -1,0 +1,1 @@
+{"allowedBuilds": ["@prisma/client", "@prisma/engines", "prisma", "better-sqlite3", "esbuild", "sharp"]}

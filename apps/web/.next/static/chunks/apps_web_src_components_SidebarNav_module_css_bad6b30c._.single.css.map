@@ -1,0 +1,6 @@
+{
+  "version": 3,
+  "sources": [],
+  "sections": [
+    {"offset": {"line": 1, "column": 0}, "map": {"version":3,"sources":["turbopack:///[project]/apps/web/src/components/SidebarNav.module.css"],"sourcesContent":[".sidebar {\n  display: flex;\n  flex-direction: column;\n  gap: 0.25rem;\n  padding: 0.75rem 0.5rem;\n  background: var(--bg-card);\n  border-right: 1px solid var(--border);\n  width: 80px;\n  flex-shrink: 0;\n}\n\n.navItem {\n  display: flex;\n  flex-direction: column;\n  align-items: center;\n  gap: 0.25rem;\n  padding: 0.75rem 0.5rem;\n  background: transparent;\n  border: none;\n  border-radius: 8px;\n  cursor: pointer;\n  transition: all 0.15s;\n  color: var(--text-dim);\n}\n\n.navItem:hover {\n  background: var(--bg-card-hover);\n  color: var(--text);\n}\n\n.navItem.active {\n  background: var(--bg-card-hover);\n  color: var(--accent-gold);\n  box-shadow: inset 2px 0 0 var(--accent-gold);\n}\n\n.icon {\n  font-size: 1.5rem;\n  line-height: 1;\n}\n\n.label {\n  font-size: 0.65rem;\n  text-transform: uppercase;\n  letter-spacing: 0.05em;\n}\n"],"names":[],"mappings":"AAAA;;;;;;;;;;;AAWA;;;;;;;;;;;;;;AAcA;;;;;AAKA;;;;;;AAMA;;;;;AAKA"}}]
+}

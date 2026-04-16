@@ -3,12 +3,14 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
-  url      = env("DATABASE_URL")
+  provider = "postgresql"
+  url      = env("postgresql://postgres.dfyjjtwakkrgwrchnytr:Khanhhoang29@aws-1-ap-northeast-1.pooler.supabase.com:5432/postgres")
 }
 
 model User {
   id              String      @id
+  username        String?
+  hasChangedUsername Boolean    @default(false)
   level           Int         @default(1)
   exp             Int         @default(0)
   gold            Int         @default(0)
@@ -35,6 +37,25 @@ model User {
   combatLogs      CombatLog[]
   shopListings    ShopListing[]
   tavernUntil     DateTime?
+  gambleStreak    Int         @default(0)
+  hasReceivedNewbieGift Boolean     @default(false)
+  petEssence      Int         @default(0)
+  unlockedTitles  String      @default("[]")
+  scrap           Int         @default(0)
+  
+  // Talent Progress (permanent count of sacrificed pets)
+  talentDps       Int         @default(0)
+  talentTank      Int         @default(0)
+  talentSupport   Int         @default(0)
+  talentBurn      Int         @default(0)
+  talentPoison    Int         @default(0)
+  lastActiveAt    DateTime    @default(now())
+  
+  // Auto Hunt System
+  autoHuntCharges      Int      @default(3)
+  lastAutoHuntChargeAt DateTime @default(now())
+  lastAutoHuntAt       DateTime?
+
   createdAt       DateTime    @default(now())
   updatedAt       DateTime    @updatedAt
 }
@@ -44,7 +65,20 @@ model Beast {
   name       String
   rarity     Rarity
   power      Int
+  
+  // New RPG fields
+  level      Int      @default(1)
+  exp        Int      @default(0)
+  isEquipped Boolean  @default(false)
+  equipSlot  Int?     // 1, 2, or 3
+  
+  role       String?  // DPS, TANK, SUPPORT
+  skillType  String?
+  skillPower Float?
+  trigger    String?  // ON_ATTACK, ON_DEFEND, ON_TURN_START
+
   ownerId    String
+  upgradeLevel Int      @default(0)
   capturedAt DateTime @default(now())
   user       User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
 
@@ -64,6 +98,11 @@ model Item {
   bonusDef  Int      @default(0)
   bonusHp   Int      @default(0)
   isEquipped Boolean @default(false)
+  equipSlot  Int?    // 1 for Weapon/Armor, 1 or 2 for Accessory
+  set        String? // Set name for bonuses
+  rarity    Rarity   @default(COMMON)
+  upgradeLevel Int   @default(0)
+  failCount    Int   @default(0)
 
   ownerId   String
   user      User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
@@ -85,6 +124,32 @@ model Skill {
   scaleWithHp Boolean      @default(false)
   scaleWithPet Boolean     @default(false)
 
+  // New fields for 70+ skills
+  hpAboveThreshold     Float?
+  hpBelowThreshold     Float?
+  targetHpBelowThreshold Float?
+  durationBonus        Int?
+  bleedDamageBonus    Float?
+  lifestealBonus      Float?
+  instantBleedTick    Boolean @default(false)
+  damageTakenIncrease Float?
+  statBonus           Float?
+  flatReduction       Int?
+  reflectPct          Float?
+  counterAtkPct       Float?
+  chancePerTriggeredSkill Float?
+  rerollFailedProc    Boolean @default(false)
+  isCritGuaranteed    Boolean @default(false)
+  selfDamage          Float?   // Pct of max HP
+  bonusCritChance     Float?
+  bonusSpeed          Float?
+  extraHitDmgMultiplier Float?
+  extraProcChance     Float?
+  isTripleHit         Boolean @default(false)
+  stackMax           Int?
+  dotMultiplier      Float?
+  duration           Int?
+
   userSkills  UserSkill[]
 }
 
@@ -97,6 +162,12 @@ enum SkillType {
   TAME
   REDUCE_DAMAGE
   CHAOS
+  COUNTER
+  BUFF
+  SHIELD
+  POISON
+  BURN
+  LIFESTEAL
 }
 
 enum SkillTrigger {
@@ -142,7 +213,6 @@ enum Rarity {
 enum ItemType {
   WEAPON
   ARMOR
-  HELMET
   ACCESSORY
   CONSUMABLE
   POTION    // Healing potion
@@ -177,6 +247,9 @@ model Quest {
   itemRewardType  ItemType?
   itemRewardPower Int?
   titleReward     String?
+  effectType      String?
+  effectValue     Float?
+  rarity          String?
   userQuests      UserQuest[]
 }
 

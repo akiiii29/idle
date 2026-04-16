@@ -1,4 +1,5 @@
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder, SlashCommandBuilder, type ButtonInteraction } from "discord.js";
+import { getSkillDescription } from "../services/skill-system";
 import { prisma } from "../services/prisma";
 import { getUserWithRelations } from "../services/user-service";
 import type { SlashCommand } from "../types/command";
@@ -11,14 +12,14 @@ function buildSkillEmbed(user: any) {
     .setTitle("Quản lý Kỹ Năng")
     .setColor(0x3498db)
     .addFields({ 
-      name: `Đang trang bị (${equipped.length}/3)`, 
-      value: equipped.length > 0 ? equipped.map((us: any) => `⚔️ **${us.skill.name}** (${us.skill.type})`).join("\n") : "Trống" 
+      name: `Đang trang bị (${equipped.length}/5)`, 
+      value: equipped.length > 0 ? equipped.map((us: any) => `⚔️ **${us.skill.name}** (${us.skill.type})\n${getSkillDescription(us.skill)}`).join("\n") : "Trống" 
     });
 
   if (unequipped.length > 0) {
     embed.addFields({
       name: "Chưa trang bị",
-      value: unequipped.map((us: any) => `📦 ${us.skill.name}`).join("\n")
+      value: unequipped.map((us: any) => `📦 **${us.skill.name}**\n${getSkillDescription(us.skill)}`).join("\n")
     });
   } else {
     embed.addFields({ name: "Chưa trang bị", value: "Không có kỹ năng nào khác." });
@@ -37,7 +38,7 @@ function buildSkillButtons(user: any) {
     for (const us of equipped) {
       equippedRow.addComponents(
         new ButtonBuilder()
-          .setCustomId(`skill_unequip:${us.skillId}`)
+          .setCustomId(`skill_unequip:${us.skillId}:${user.id}`)
           .setLabel(`Tháo ${us.skill.name}`)
           .setStyle(ButtonStyle.Danger)
       );
@@ -50,7 +51,7 @@ function buildSkillButtons(user: any) {
     const us = unequipped[i];
     currentRow.addComponents(
       new ButtonBuilder()
-        .setCustomId(`skill_equip:${us.skillId}`)
+        .setCustomId(`skill_equip:${us.skillId}:${user.id}`)
         .setLabel(`${us.skill.name}`)
         .setStyle(ButtonStyle.Secondary)
     );
@@ -98,7 +99,15 @@ export async function handleSkillButton(interaction: ButtonInteraction): Promise
 
   if (!isEquip && !isUnequip) return false;
 
-  const skillId = customId.split(":")[1];
+  const parts = customId.split(":");
+  const skillId = parts[1];
+  const ownerId = parts[2];
+
+  if (interaction.user.id !== ownerId) {
+    await interaction.reply({ content: "Đây không phải bảng kỹ năng của bạn!", ephemeral: true });
+    return true;
+  }
+
   const user = await getUserWithRelations(interaction.user.id);
 
   if (!user) {
@@ -118,8 +127,8 @@ export async function handleSkillButton(interaction: ButtonInteraction): Promise
       await interaction.reply({ content: "Kỹ năng này đã được trang bị!", ephemeral: true });
       return true;
     }
-    if (equippedCount >= 3) {
-      await interaction.reply({ content: "Bạn đã vượt quá 3 kỹ năng trang bị. Hãy tháo ra bớt.", ephemeral: true });
+    if (equippedCount >= 5) {
+      await interaction.reply({ content: "Bạn đã trang bị tối đa 5 kỹ năng. Hãy tháo ra bớt.", ephemeral: true });
       return true;
     }
 

@@ -1,0 +1,6 @@
+{
+  "version": 3,
+  "sources": [],
+  "sections": [
+    {"offset": {"line": 2, "column": 0}, "map": {"version":3,"sources":["file:///D:/works/idle/idle/apps/web/src/app/globals.css"],"sourcesContent":["@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Rajdhani:wght@400;600;700&display=swap');\n\n* {\n  box-sizing: border-box;\n  margin: 0;\n  padding: 0;\n}\n\n:root {\n  --bg-primary: #0a0b10;\n  --bg-card: #12141f;\n  --bg-card-hover: #1a1d2e;\n  --border: #2a2d3e;\n  --text: #e8e8f0;\n  --text-dim: #6b6d7a;\n  --accent-gold: #f0c040;\n  --accent-purple: #9b6dff;\n  --hp-green: #22c55e;\n  --hp-yellow: #eab308;\n  --hp-red: #ef4444;\n  --damage-red: #ff4757;\n  --heal-green: #2dd4bf;\n}\n\nbody {\n  font-family: system-ui, -apple-system, sans-serif;\n  background: var(--bg-primary);\n  color: var(--text);\n  min-height: 100vh;\n  overflow: hidden;\n  font-size: 16px;\n}\n\n::-webkit-scrollbar {\n  width: 6px;\n  height: 6px;\n}\n\n::-webkit-scrollbar-track {\n  background: var(--bg-primary);\n}\n\n::-webkit-scrollbar-thumb {\n  background: var(--border);\n  border-radius: 3px;\n}\n\n::-webkit-scrollbar-thumb:hover {\n  background: var(--text-dim);\n}\n"],"names":[],"mappings":"AAEA;;;;;;AAMA;;;;;;;;;;;;;;;;AAgBA;;;;;;;;;AASA;;;;;AAKA;;;;AAIA;;;;;AAKA","debugId":null}}]
+}

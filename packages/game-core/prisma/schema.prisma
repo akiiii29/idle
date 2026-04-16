@@ -1,0 +1,284 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id              String      @id
+  username        String?
+  hasChangedUsername Boolean    @default(false)
+  level           Int         @default(1)
+  exp             Int         @default(0)
+  gold            Int         @default(0)
+  str             Int         @default(5)
+  agi             Int         @default(5)
+  luck            Int         @default(1)
+  // Max number of unique item stacks the player can hold.
+  inventoryLimit Int         @default(50)
+  // Remaining number of hunts Spirit Bond will buff top pet for.
+  spiritBondHuntsLeft Int    @default(0)
+  currentHp       Int         @default(100)
+  maxHp           Int         @default(100)
+  lastHunt        DateTime?
+  lastDaily       DateTime?
+  lastHpUpdatedAt DateTime    @default(now())
+  hospitalUntil   DateTime?
+  title           String?
+  isBusy          Boolean     @default(false)
+  busyUntil       DateTime?
+  beasts          Beast[]
+  inventory       Item[]
+  quests          UserQuest[]
+  skills          UserSkill[]
+  combatLogs      CombatLog[]
+  shopListings    ShopListing[]
+  tavernUntil     DateTime?
+  gambleStreak    Int         @default(0)
+  hasReceivedNewbieGift Boolean     @default(false)
+  petEssence      Int         @default(0)
+  unlockedTitles  String      @default("[]")
+  scrap           Int         @default(0)
+
+  // Talent Progress (permanent count of sacrificed pets)
+  talentDps       Int         @default(0)
+  talentTank      Int         @default(0)
+  talentSupport   Int         @default(0)
+  talentBurn      Int         @default(0)
+  talentPoison    Int         @default(0)
+  lastActiveAt    DateTime    @default(now())
+
+  // Auto Hunt System
+  autoHuntCharges      Int      @default(3)
+  lastAutoHuntChargeAt DateTime @default(now())
+  lastAutoHuntAt       DateTime?
+
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+}
+
+model Beast {
+  id         String   @id @default(cuid())
+  name       String
+  rarity     Rarity
+  power      Int
+
+  // New RPG fields
+  level      Int      @default(1)
+  exp        Int      @default(0)
+  isEquipped Boolean  @default(false)
+  equipSlot  Int?     // 1, 2, or 3
+
+  role       String?  // DPS, TANK, SUPPORT
+  skillType  String?
+  skillPower Float?
+  trigger    String?  // ON_ATTACK, ON_DEFEND, ON_TURN_START
+
+  ownerId    String
+  upgradeLevel Int      @default(0)
+  capturedAt DateTime @default(now())
+  user       User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+
+  @@index([ownerId])
+}
+
+model Item {
+  id        String   @id @default(cuid())
+  name      String
+  type      ItemType
+  power     Int      @default(0)
+  quantity  Int      @default(1)
+
+  // New combat fields
+  bonusStr  Int      @default(0)
+  bonusAgi  Int      @default(0)
+  bonusDef  Int      @default(0)
+  bonusHp   Int      @default(0)
+  isEquipped Boolean @default(false)
+  equipSlot  Int?    // 1 for Weapon/Armor, 1 or 2 for Accessory
+  set        String? // Set name for bonuses
+  rarity    Rarity   @default(COMMON)
+  upgradeLevel Int   @default(0)
+  failCount    Int   @default(0)
+
+  ownerId   String
+  user      User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+
+  @@index([ownerId])
+  @@unique([ownerId, name, type])
+}
+
+model Skill {
+  id          String       @id @default(cuid())
+  name        String       @unique
+  type        SkillType    @default(DAMAGE)
+  trigger     SkillTrigger @default(ON_ATTACK)
+  multiplier  Float        @default(1.0)
+  chance      Float        @default(0.1) // 0.0 to 1.0
+
+  ignoreDef   Boolean      @default(false)
+  extraHit    Boolean      @default(false)
+  scaleWithHp Boolean      @default(false)
+  scaleWithPet Boolean     @default(false)
+
+  // New fields for 70+ skills
+  hpAboveThreshold     Float?
+  hpBelowThreshold     Float?
+  targetHpBelowThreshold Float?
+  durationBonus        Int?
+  bleedDamageBonus    Float?
+  lifestealBonus      Float?
+  instantBleedTick    Boolean @default(false)
+  damageTakenIncrease Float?
+  statBonus           Float?
+  flatReduction       Int?
+  reflectPct          Float?
+  counterAtkPct       Float?
+  chancePerTriggeredSkill Float?
+  rerollFailedProc    Boolean @default(false)
+  isCritGuaranteed    Boolean @default(false)
+  selfDamage          Float?   // Pct of max HP
+  bonusCritChance     Float?
+  bonusSpeed          Float?
+  extraHitDmgMultiplier Float?
+  extraProcChance     Float?
+  isTripleHit         Boolean @default(false)
+  stackMax           Int?
+  dotMultiplier      Float?
+  duration           Int?
+
+  userSkills  UserSkill[]
+}
+
+enum SkillType {
+  DAMAGE
+  DOT
+  DODGE
+  HEAL
+  GOLD
+  TAME
+  REDUCE_DAMAGE
+  CHAOS
+  COUNTER
+  BUFF
+  SHIELD
+  POISON
+  BURN
+  LIFESTEAL
+}
+
+enum SkillTrigger {
+  ON_ATTACK
+  ON_DEFEND
+  ON_TURN_START
+}
+
+model UserSkill {
+  id         String @id @default(cuid())
+  userId     String
+  skillId    String
+  isEquipped Boolean @default(false)
+  user       User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  skill      Skill  @relation(fields: [skillId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, skillId])
+  @@index([userId])
+  @@index([skillId])
+}
+
+model CombatLog {
+  id          String   @id @default(cuid())
+  userId      String
+  enemyName   String
+  isWin       Boolean
+  logDetails  String   // Use larger text store
+  goldGained    Int      @default(0)
+  expGained     Int      @default(0)
+  createdAt   DateTime @default(now())
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+enum Rarity {
+  COMMON
+  RARE
+  EPIC
+  LEGENDARY
+}
+
+enum ItemType {
+  WEAPON
+  ARMOR
+  ACCESSORY
+  CONSUMABLE
+  POTION    // Healing potion
+  TRAP      // Legacy/Special
+  LUCK_BUFF // Legacy/Special
+  MEAT      // Legacy/Special
+  UTILITY
+  GAMBLE
+  BUFF
+  SITUATIONAL
+  PERMANENT
+  ENCOUNTER
+  RISK
+  CHAOS
+  PET_BUFF
+}
+
+enum QuestType {
+  DAILY
+  WEEKLY
+  ACHIEVEMENT
+}
+
+model Quest {
+  id              String      @id @default(cuid())
+  key             String      @unique
+  description     String
+  type            QuestType
+  target          Int
+  goldReward      Int         @default(0)
+  itemRewardName  String?
+  itemRewardType  ItemType?
+  itemRewardPower Int?
+  titleReward     String?
+  effectType      String?
+  effectValue     Float?
+  rarity          String?
+  userQuests      UserQuest[]
+}
+
+model UserQuest {
+  id          String   @id @default(cuid())
+  userId      String
+  questId     String
+  progress    Int      @default(0)
+  isCompleted Boolean  @default(false)
+  isClaimed   Boolean  @default(false)
+  resetAt     DateTime
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  quest       Quest    @relation(fields: [questId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([questId])
+  @@unique([userId, questId])
+}
+
+// Daily shop rotation — 3 slots per user, refreshed each day
+model ShopListing {
+  id          String   @id @default(cuid())
+  userId      String
+  slot        Int      // 1, 2, or 3
+  itemKey     String   // Key from SHOP_CATALOG
+  purchased   Boolean  @default(false)
+  refreshedAt DateTime @default(now())
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, slot])
+  @@index([userId])
+}

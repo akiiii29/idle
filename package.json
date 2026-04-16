@@ -1,26 +1,21 @@
 {
-  "name": "discord-rpg-bot",
+  "name": "discord-rpg-monorepo",
   "version": "1.0.0",
   "private": true,
-  "description": "A simple catch-and-battle Discord RPG bot built with discord.js, Prisma, SQLite, and TypeScript.",
-  "main": "dist/index.js",
+  "description": "Monorepo for Discord RPG bot with game-core, bot, and web apps",
   "scripts": {
-    "build": "tsc -p tsconfig.json",
-    "dev": "tsx watch src/index.ts",
-    "start": "node dist/index.js",
-    "prisma:generate": "prisma generate",
-    "db:push": "prisma db push",
-    "db:studio": "prisma studio"
-  },
-  "dependencies": {
-    "@prisma/client": "^6.6.0",
-    "discord.js": "^14.19.3",
-    "dotenv": "^16.4.7"
+    "build": "pnpm -r --filter=!apps/web run build",
+    "dev:bot": "pnpm --filter @rpg/bot dev",
+    "dev:web": "pnpm --filter @rpg/web dev",
+    "prisma:generate": "pnpm -r --filter=@game/core run prisma:generate",
+    "typecheck": "pnpm -r run typecheck"
   },
   "devDependencies": {
-    "@types/node": "^22.14.1",
-    "prisma": "^6.6.0",
-    "tsx": "^4.19.3",
     "typescript": "^5.8.3"
+  },
+  "dependencies": {
+    "@prisma/client": "6.19.3",
+    "better-sqlite3": "^11.10.0",
+    "sql.js": "^1.14.1"
   }
 }

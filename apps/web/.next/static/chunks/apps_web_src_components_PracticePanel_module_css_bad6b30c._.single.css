@@ -1,0 +1,307 @@
+/* [project]/apps/web/src/components/PracticePanel.module.css [app-client] (css) */
+.PracticePanel-module__ZbI18q__panel {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  flex-direction: column;
+  gap: 1.25rem;
+  padding: 1rem;
+  display: flex;
+}
+
+.PracticePanel-module__ZbI18q__title {
+  color: var(--accent-purple);
+  margin: 0;
+  font-family: Rajdhani, sans-serif;
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.PracticePanel-module__ZbI18q__actionRow {
+  align-items: center;
+  gap: .75rem;
+  display: flex;
+}
+
+.PracticePanel-module__ZbI18q__runBtn {
+  background: var(--accent-purple);
+  color: #fff;
+  cursor: pointer;
+  border: none;
+  border-radius: 8px;
+  padding: .75rem 1.5rem;
+  font-size: .85rem;
+  font-weight: 700;
+  transition: all .15s;
+}
+
+.PracticePanel-module__ZbI18q__runBtn:hover:not(:disabled) {
+  background: #7c3aed;
+}
+
+.PracticePanel-module__ZbI18q__runBtn:disabled {
+  opacity: .6;
+  cursor: not-allowed;
+}
+
+.PracticePanel-module__ZbI18q__emptyState {
+  text-align: center;
+  color: var(--text-dim);
+  padding: 1.5rem;
+  font-size: .82rem;
+}
+
+.PracticePanel-module__ZbI18q__emptyState p {
+  margin: .3rem 0;
+}
+
+.PracticePanel-module__ZbI18q__emptyNote {
+  opacity: .7;
+  font-size: .72rem !important;
+}
+
+.PracticePanel-module__ZbI18q__loadingState {
+  color: var(--text-dim);
+  flex-direction: column;
+  align-items: center;
+  gap: .75rem;
+  padding: 2rem;
+  display: flex;
+}
+
+.PracticePanel-module__ZbI18q__spinner {
+  border: 3px solid var(--border);
+  border-top-color: var(--accent-purple);
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  animation: .8s linear infinite PracticePanel-module__ZbI18q__spin;
+}
+
+@keyframes PracticePanel-module__ZbI18q__spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.PracticePanel-module__ZbI18q__results {
+  flex-direction: column;
+  gap: 1.25rem;
+  display: flex;
+}
+
+.PracticePanel-module__ZbI18q__sectionTitle {
+  text-transform: uppercase;
+  letter-spacing: .1em;
+  color: var(--text-dim);
+  border-bottom: 1px solid var(--border);
+  margin: 0 0 .5rem;
+  padding-bottom: .35rem;
+  font-size: .7rem;
+}
+
+.PracticePanel-module__ZbI18q__damageSection, .PracticePanel-module__ZbI18q__ratingsSection, .PracticePanel-module__ZbI18q__activationsSection, .PracticePanel-module__ZbI18q__skillSection, .PracticePanel-module__ZbI18q__synergySection {
+  flex-direction: column;
+  display: flex;
+}
+
+.PracticePanel-module__ZbI18q__damageGrid {
+  grid-template-columns: 1fr 1fr;
+  gap: .75rem;
+  display: grid;
+}
+
+.PracticePanel-module__ZbI18q__bigDmgCard {
+  background: var(--bg-primary);
+  border: 2px solid var(--border);
+  border-radius: 12px;
+  flex-direction: column;
+  align-items: center;
+  gap: .3rem;
+  padding: 1rem;
+  display: flex;
+}
+
+.PracticePanel-module__ZbI18q__dmgLabel {
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  color: var(--text-dim);
+  font-size: .7rem;
+}
+
+.PracticePanel-module__ZbI18q__bigDmgVal {
+  color: var(--accent-gold);
+  font-family: JetBrains Mono, monospace;
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.PracticePanel-module__ZbI18q__ratingsGrid {
+  grid-template-columns: repeat(3, 1fr);
+  gap: .5rem;
+  display: grid;
+}
+
+.PracticePanel-module__ZbI18q__ratingCard {
+  background: var(--bg-primary);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  flex-direction: column;
+  align-items: center;
+  gap: .2rem;
+  padding: .6rem;
+  display: flex;
+}
+
+.PracticePanel-module__ZbI18q__ratingLabel {
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  color: var(--text-dim);
+  font-size: .6rem;
+}
+
+.PracticePanel-module__ZbI18q__ratingVal {
+  color: var(--accent-gold);
+  font-family: JetBrains Mono, monospace;
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.PracticePanel-module__ZbI18q__activationsGrid {
+  grid-template-columns: repeat(5, 1fr);
+  gap: .5rem;
+  display: grid;
+}
+
+.PracticePanel-module__ZbI18q__actCard {
+  background: var(--bg-primary);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  flex-direction: column;
+  align-items: center;
+  gap: .2rem;
+  padding: .6rem .4rem;
+  display: flex;
+}
+
+.PracticePanel-module__ZbI18q__actLabel {
+  text-transform: uppercase;
+  letter-spacing: .03em;
+  color: var(--text-dim);
+  text-align: center;
+  font-size: .58rem;
+}
+
+.PracticePanel-module__ZbI18q__actVal {
+  color: var(--accent-purple);
+  font-family: JetBrains Mono, monospace;
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.PracticePanel-module__ZbI18q__skillList {
+  background: var(--bg-primary);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.PracticePanel-module__ZbI18q__skillRow {
+  border-bottom: 1px solid var(--border);
+  justify-content: space-between;
+  padding: .4rem .75rem;
+  display: flex;
+}
+
+.PracticePanel-module__ZbI18q__skillRow:last-child {
+  border-bottom: none;
+}
+
+.PracticePanel-module__ZbI18q__skillName {
+  color: var(--text);
+  font-size: .75rem;
+}
+
+.PracticePanel-module__ZbI18q__skillCount {
+  color: var(--accent-purple);
+  font-family: JetBrains Mono, monospace;
+  font-size: .75rem;
+  font-weight: 700;
+}
+
+.PracticePanel-module__ZbI18q__synergyList {
+  flex-wrap: wrap;
+  gap: .4rem;
+  display: flex;
+}
+
+.PracticePanel-module__ZbI18q__synergyBadge {
+  border: 1px solid var(--accent-purple);
+  color: var(--accent-purple);
+  background: rgba(155, 109, 255, .1);
+  border-radius: 20px;
+  padding: .25rem .6rem;
+  font-size: .7rem;
+}
+
+.PracticePanel-module__ZbI18q__logSection {
+  flex-direction: column;
+  display: flex;
+}
+
+.PracticePanel-module__ZbI18q__logToggle {
+  background: var(--bg-primary);
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  cursor: pointer;
+  text-align: left;
+  border-radius: 8px;
+  padding: .6rem 1rem;
+  font-size: .8rem;
+  font-weight: 600;
+  transition: all .15s;
+}
+
+.PracticePanel-module__ZbI18q__logToggle:hover {
+  border-color: var(--accent-purple);
+  color: var(--text);
+}
+
+.PracticePanel-module__ZbI18q__logContent {
+  background: var(--bg-primary);
+  border: 1px solid var(--border);
+  border-top: none;
+  border-radius: 0 0 8px 8px;
+  flex-direction: column;
+  gap: .75rem;
+  max-height: 400px;
+  padding: .75rem;
+  display: flex;
+  overflow-y: auto;
+}
+
+.PracticePanel-module__ZbI18q__logTurn {
+  border-bottom: 1px solid var(--border);
+  padding-bottom: .5rem;
+}
+
+.PracticePanel-module__ZbI18q__logTurn:last-child {
+  border-bottom: none;
+}
+
+.PracticePanel-module__ZbI18q__logTurnLabel {
+  color: var(--accent-gold);
+  margin: 0 0 .3rem;
+  font-size: .7rem;
+  font-weight: 700;
+}
+
+.PracticePanel-module__ZbI18q__logEvent {
+  color: var(--text-dim);
+  margin: .1rem 0;
+  padding-left: .5rem;
+  font-size: .7rem;
+  line-height: 1.4;
+}
+
+/*# sourceMappingURL=apps_web_src_components_PracticePanel_module_css_bad6b30c._.single.css.map*/

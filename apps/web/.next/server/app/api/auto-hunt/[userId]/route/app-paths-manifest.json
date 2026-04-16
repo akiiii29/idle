@@ -1,0 +1,3 @@
+{
+  "/api/auto-hunt/[userId]/route": "app/api/auto-hunt/[userId]/route.js"
+}
