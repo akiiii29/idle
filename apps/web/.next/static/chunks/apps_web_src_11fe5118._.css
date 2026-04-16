@@ -970,6 +970,27 @@
   background: rgba(240, 192, 64, .05);
 }
 
+.InventoryPanel-module__a8QOVW__cardTooltipFlip .InventoryPanel-module__a8QOVW__itemTooltip {
+  top: calc(100% + 10px);
+  bottom: auto;
+}
+
+.InventoryPanel-module__a8QOVW__cardTooltipFlip:hover .InventoryPanel-module__a8QOVW__itemTooltip {
+  animation-name: InventoryPanel-module__a8QOVW__tooltipInFlip;
+}
+
+@keyframes InventoryPanel-module__a8QOVW__tooltipInFlip {
+  from {
+    opacity: 0;
+    transform: translateX(-50%)translateY(-4px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(-50%)translateY(0);
+  }
+}
+
 .InventoryPanel-module__a8QOVW__itemIcon {
   font-size: 2.2rem;
   line-height: 1;

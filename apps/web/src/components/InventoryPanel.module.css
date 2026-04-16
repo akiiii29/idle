@@ -135,6 +135,21 @@
   background: rgba(240, 192, 64, 0.05);
 }
 
+/* Flip tooltip to bottom when card is near top of viewport */
+.cardTooltipFlip .itemTooltip {
+  bottom: auto;
+  top: calc(100% + 10px);
+}
+
+.cardTooltipFlip:hover .itemTooltip {
+  animation-name: tooltipInFlip;
+}
+
+@keyframes tooltipInFlip {
+  from { opacity: 0; transform: translateX(-50%) translateY(-4px); }
+  to { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
 .itemIcon {
   font-size: 2.2rem;
   line-height: 1;

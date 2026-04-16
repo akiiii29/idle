@@ -5800,6 +5800,7 @@ async function POST(request) {
         if (!isWin) {
             const finalGold = Math.floor(accumulatedGold * (1 - DEATH_PENALTY));
             const finalExp = Math.floor(accumulatedExp * (1 - DEATH_PENALTY));
+            const finalHp = 0; // Force HP to 0 on death
             await __TURBOPACK__imported__module__$5b$project$5d2f$apps$2f$web$2f$src$2f$lib$2f$prisma$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["prisma"].$transaction([
                 __TURBOPACK__imported__module__$5b$project$5d2f$apps$2f$web$2f$src$2f$lib$2f$prisma$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["prisma"].user.update({
                     where: {
@@ -5812,7 +5813,8 @@ async function POST(request) {
                         exp: {
                             increment: finalExp
                         },
-                        currentHp: Math.max(0, Math.floor(currentHp))
+                        currentHp: finalHp,
+                        hospitalUntil: new Date(Date.now() + 30 * 60 * 1000)
                     }
                 }),
                 ...potionsUsed > 0 && potionStack ? [
@@ -5833,7 +5835,7 @@ async function POST(request) {
                 fightsCompleted: n,
                 goldGained: finalGold,
                 expGained: finalExp,
-                hpRemaining: Math.floor(currentHp),
+                hpRemaining: finalHp,
                 potionsUsed,
                 logs: fightsLog
             });
@@ -5870,7 +5872,8 @@ async function POST(request) {
                         exp: {
                             increment: finalExp
                         },
-                        currentHp: 0
+                        currentHp: 0,
+                        hospitalUntil: new Date(Date.now() + 30 * 60 * 1000)
                     }
                 }),
                 ...potionsUsed > 0 && potionStack ? [

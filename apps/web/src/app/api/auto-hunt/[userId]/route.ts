@@ -141,13 +141,15 @@ export async function POST(request: NextRequest) {
     if (!isWin) {
       const finalGold = Math.floor(accumulatedGold * (1 - DEATH_PENALTY));
       const finalExp = Math.floor(accumulatedExp * (1 - DEATH_PENALTY));
+      const finalHp = 0; // Force HP to 0 on death
       await prisma.$transaction([
         prisma.user.update({
           where: { id: userId },
           data: {
             gold: { increment: finalGold },
             exp: { increment: finalExp },
-            currentHp: Math.max(0, Math.floor(currentHp)),
+            currentHp: finalHp,
+            hospitalUntil: new Date(Date.now() + 30 * 60 * 1000),
           },
         }),
         ...(potionsUsed > 0 && potionStack ? [
@@ -159,7 +161,7 @@ export async function POST(request: NextRequest) {
         fightsCompleted: n,
         goldGained: finalGold,
         expGained: finalExp,
-        hpRemaining: Math.floor(currentHp),
+        hpRemaining: finalHp,
         potionsUsed,
         logs: fightsLog,
       });
@@ -194,6 +196,7 @@ export async function POST(request: NextRequest) {
             gold: { increment: finalGold },
             exp: { increment: finalExp },
             currentHp: 0,
+            hospitalUntil: new Date(Date.now() + 30 * 60 * 1000),
           },
         }),
         ...(potionsUsed > 0 && potionStack ? [

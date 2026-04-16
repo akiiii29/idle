@@ -212,6 +212,7 @@ export class AutoHuntService {
           gold: { increment: finalGold },
           exp: { increment: finalExp },
           currentHp: Math.max(0, Math.floor(hp)),
+          hospitalUntil: status === "DIED" ? new Date(Date.now() + 30 * 60 * 1000) : undefined,
         }
       }),
       // Decrement potions if used

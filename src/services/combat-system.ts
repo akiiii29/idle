@@ -285,6 +285,27 @@ export async function handleAutoHunt(
     throw new Error("Bạn không còn HP! Hãy đợi hồi phục hoặc dùng vật phẩm.");
   }
 
+  // ── Charge Check & Deduction ──
+  const lastChargeAt = user.lastAutoHuntChargeAt?.getTime() || user.createdAt.getTime();
+  const elapsed = Date.now() - lastChargeAt;
+  let charges = user.autoHuntCharges ?? 3;
+  if (elapsed >= 2 * 60 * 60 * 1000) {
+    const gained = Math.floor(elapsed / (2 * 60 * 60 * 1000));
+    charges = Math.min(3, charges + gained);
+  }
+  if (charges <= 0) {
+    throw new Error("Bạn không còn lượt Săn tự động. (1 lượt mỗi 2 giờ)");
+  }
+
+  await prisma.user.update({
+    where: { id: userId },
+    data: {
+      autoHuntCharges: charges - 1,
+      lastAutoHuntChargeAt: user.lastAutoHuntChargeAt ?? new Date(),
+      lastAutoHuntAt: new Date(),
+    },
+  });
+
   // 1. Prepare Stats
   const equippedItems = user.inventory.filter((i: any) => i.isEquipped);
   const equippedPets = user.beasts.filter((b: any) => b.isEquipped);
@@ -398,7 +419,8 @@ export async function handleAutoHunt(
         currentUserState.exp += e;
       }
     } else {
-      // Lost or tied
+      // Lost or tied — force HP to 0 if dead
+      currentHp = currentHp <= 0 ? 0 : currentHp;
       break;
     }
 

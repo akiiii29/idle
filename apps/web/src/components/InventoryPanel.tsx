@@ -35,7 +35,10 @@ const typeHints: Record<string, string> = {
 const consumableTypes = new Set(["POTION", "CONSUMABLE", "LUCK_BUFF", "MEAT"]);
 
 function ItemTooltip({ item, isEquipped }: { item: any; isEquipped: boolean }) {
-  const hasStats = item.bonusStr > 0 || item.bonusAgi > 0 || item.bonusDef > 0 || item.bonusHp > 0;
+  const isAccessory = item.type === "ACCESSORY";
+  // Accessories often have power=0 but provide stat bonuses — always show stats for them
+  const hasStats = isAccessory
+    || item.bonusStr > 0 || item.bonusAgi > 0 || item.bonusDef > 0 || item.bonusHp > 0;
 
   return (
     <div className={styles.itemTooltip}>
@@ -101,6 +104,25 @@ export default function InventoryPanel({ user, onUpdate }: { user: any; onUpdate
   const [activeTab, setActiveTab] = useState<"inventory" | "equipment">("inventory");
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [toast, setToast] = useState<{ msg: string; type: "success" | "error" } | null>(null);
+  const [flipTooltip, setFlipTooltip] = useState<Set<string>>(new Set());
+
+  function handleCardMouseEnter(itemId: string) {
+    const card = document.querySelector(`[data-item-id="${itemId}"]`);
+    if (card) {
+      const rect = card.getBoundingClientRect();
+      if (rect.top < 200) {
+        setFlipTooltip(prev => new Set(prev).add(itemId));
+      }
+    }
+  }
+
+  function handleCardMouseLeave(itemId: string) {
+    setFlipTooltip(prev => {
+      const next = new Set(prev);
+      next.delete(itemId);
+      return next;
+    });
+  }
 
   const items = user.inventory || [];
   const equipped = items.filter((i: any) => i.isEquipped);
@@ -164,12 +186,17 @@ export default function InventoryPanel({ user, onUpdate }: { user: any; onUpdate
 
   function renderItemCard(item: any, isEquippedTab: boolean) {
     const isConsumable = consumableTypes.has(item.type);
+    const flipped = flipTooltip.has(item.id);
 
     return (
       <div
         key={item.id}
-        className={`${styles.itemCard} ${isEquippedTab ? styles.equipped : ""}`}
+        data-item-card
+        data-item-id={item.id}
+        className={`${styles.itemCard} ${isEquippedTab ? styles.equipped : ""} ${flipped ? styles.cardTooltipFlip : ""}`}
         style={{ borderColor: rarityColors[item.rarity] || "#444" }}
+        onMouseEnter={() => handleCardMouseEnter(item.id)}
+        onMouseLeave={() => handleCardMouseLeave(item.id)}
       >
         <div className={styles.itemIcon}>
           {typeIcons[item.type] || "📦"}

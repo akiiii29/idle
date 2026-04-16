@@ -1796,6 +1796,7 @@ function BreakdownSection({ breakdown }) {
 __turbopack_context__.v({
   "activeFilter": "InventoryPanel-module__a8QOVW__activeFilter",
   "activeTab": "InventoryPanel-module__a8QOVW__activeTab",
+  "cardTooltipFlip": "InventoryPanel-module__a8QOVW__cardTooltipFlip",
   "empty": "InventoryPanel-module__a8QOVW__empty",
   "equipped": "InventoryPanel-module__a8QOVW__equipped",
   "equippedLabel": "InventoryPanel-module__a8QOVW__equippedLabel",
@@ -1823,6 +1824,7 @@ __turbopack_context__.v({
   "tooltipHeader": "InventoryPanel-module__a8QOVW__tooltipHeader",
   "tooltipHint": "InventoryPanel-module__a8QOVW__tooltipHint",
   "tooltipIn": "InventoryPanel-module__a8QOVW__tooltipIn",
+  "tooltipInFlip": "InventoryPanel-module__a8QOVW__tooltipInFlip",
   "tooltipName": "InventoryPanel-module__a8QOVW__tooltipName",
   "tooltipRarity": "InventoryPanel-module__a8QOVW__tooltipRarity",
   "tooltipRow": "InventoryPanel-module__a8QOVW__tooltipRow",
@@ -1879,7 +1881,9 @@ const consumableTypes = new Set([
     "MEAT"
 ]);
 function ItemTooltip({ item, isEquipped }) {
-    const hasStats = item.bonusStr > 0 || item.bonusAgi > 0 || item.bonusDef > 0 || item.bonusHp > 0;
+    const isAccessory = item.type === "ACCESSORY";
+    // Accessories often have power=0 but provide stat bonuses — always show stats for them
+    const hasStats = isAccessory || item.bonusStr > 0 || item.bonusAgi > 0 || item.bonusDef > 0 || item.bonusHp > 0;
     return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$15$2e$5$2e$15_react$2d$dom$40$19$2e$2$2e$5_react$40$19$2e$2$2e$5_$5f$react$40$19$2e$2$2e$5$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
         className: __TURBOPACK__imported__module__$5b$project$5d2f$apps$2f$web$2f$src$2f$components$2f$InventoryPanel$2e$module$2e$css__$5b$app$2d$ssr$5d$__$28$css__module$29$__["default"].itemTooltip,
         children: [
@@ -1891,7 +1895,7 @@ function ItemTooltip({ item, isEquipped }) {
                         children: item.name
                     }, void 0, false, {
                         fileName: "[project]/apps/web/src/components/InventoryPanel.tsx",
-                        lineNumber: 43,
+                        lineNumber: 46,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$15$2e$5$2e$15_react$2d$dom$40$19$2e$2$2e$5_react$40$19$2e$2$2e$5_$5f$react$40$19$2e$2$2e$5$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -1902,13 +1906,13 @@ function ItemTooltip({ item, isEquipped }) {
                         children: item.rarity
                     }, void 0, false, {
                         fileName: "[project]/apps/web/src/components/InventoryPanel.tsx",
-                        lineNumber: 44,
+                        lineNumber: 47,
                         columnNumber: 9
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/apps/web/src/components/InventoryPanel.tsx",
-                lineNumber: 42,
+                lineNumber: 45,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$15$2e$5$2e$15_react$2d$dom$40$19$2e$2$2e$5_react$40$19$2e$2$2e$5_$5f$react$40$19$2e$2$2e$5$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1918,20 +1922,20 @@ function ItemTooltip({ item, isEquipped }) {
                         children: "Type"
                     }, void 0, false, {
                         fileName: "[project]/apps/web/src/components/InventoryPanel.tsx",
-                        lineNumber: 50,
+                        lineNumber: 53,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$15$2e$5$2e$15_react$2d$dom$40$19$2e$2$2e$5_react$40$19$2e$2$2e$5_$5f$react$40$19$2e$2$2e$5$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                         children: typeIcons[item.type] || item.type
                     }, void 0, false, {
                         fileName: "[project]/apps/web/src/components/InventoryPanel.tsx",
-                        lineNumber: 51,
+                        lineNumber: 54,
                         columnNumber: 9
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/apps/web/src/components/InventoryPanel.tsx",
-                lineNumber: 49,
+                lineNumber: 52,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$15$2e$5$2e$15_react$2d$dom$40$19$2e$2$2e$5_react$40$19$2e$2$2e$5_$5f$react$40$19$2e$2$2e$5$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1941,27 +1945,27 @@ function ItemTooltip({ item, isEquipped }) {
                         children: "Power"
                     }, void 0, false, {
                         fileName: "[project]/apps/web/src/components/InventoryPanel.tsx",
-                        lineNumber: 54,
+                        lineNumber: 57,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$15$2e$5$2e$15_react$2d$dom$40$19$2e$2$2e$5_react$40$19$2e$2$2e$5_$5f$react$40$19$2e$2$2e$5$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                         children: item.power
                     }, void 0, false, {
                         fileName: "[project]/apps/web/src/components/InventoryPanel.tsx",
-                        lineNumber: 55,
+                        lineNumber: 58,
                         columnNumber: 9
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/apps/web/src/components/InventoryPanel.tsx",
-                lineNumber: 53,
+                lineNumber: 56,
                 columnNumber: 7
             }, this),
             hasStats && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$15$2e$5$2e$15_react$2d$dom$40$19$2e$2$2e$5_react$40$19$2e$2$2e$5_$5f$react$40$19$2e$2$2e$5$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("hr", {
                 className: __TURBOPACK__imported__module__$5b$project$5d2f$apps$2f$web$2f$src$2f$components$2f$InventoryPanel$2e$module$2e$css__$5b$app$2d$ssr$5d$__$28$css__module$29$__["default"].tooltipDivider
             }, void 0, false, {
                 fileName: "[project]/apps/web/src/components/InventoryPanel.tsx",
-                lineNumber: 58,
+                lineNumber: 61,
                 columnNumber: 20
             }, this),
             item.bonusStr > 0 && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$15$2e$5$2e$15_react$2d$dom$40$19$2e$2$2e$5_react$40$19$2e$2$2e$5_$5f$react$40$19$2e$2$2e$5$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1971,7 +1975,7 @@ function ItemTooltip({ item, isEquipped }) {
                         children: "STR"
                     }, void 0, false, {
                         fileName: "[project]/apps/web/src/components/InventoryPanel.tsx",
-                        lineNumber: 62,
+                        lineNumber: 65,
                         columnNumber: 11
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$15$2e$5$2e$15_react$2d$dom$40$19$2e$2$2e$5_react$40$19$2e$2$2e$5_$5f$react$40$19$2e$2$2e$5$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -1984,13 +1988,13 @@ function ItemTooltip({ item, isEquipped }) {
                         ]
                     }, void 0, true, {
                         fileName: "[project]/apps/web/src/components/InventoryPanel.tsx",
-                        lineNumber: 63,
+                        lineNumber: 66,
                         columnNumber: 11
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/apps/web/src/components/InventoryPanel.tsx",
-                lineNumber: 61,
+                lineNumber: 64,
                 columnNumber: 9
             }, this),
             item.bonusAgi > 0 && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$15$2e$5$2e$15_react$2d$dom$40$19$2e$2$2e$5_react$40$19$2e$2$2e$5_$5f$react$40$19$2e$2$2e$5$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2000,7 +2004,7 @@ function ItemTooltip({ item, isEquipped }) {
                         children: "AGI"
                     }, void 0, false, {
                         fileName: "[project]/apps/web/src/components/InventoryPanel.tsx",
-                        lineNumber: 68,
+                        lineNumber: 71,
                         columnNumber: 11
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$15$2e$5$2e$15_react$2d$dom$40$19$2e$2$2e$5_react$40$19$2e$2$2e$5_$5f$react$40$19$2e$2$2e$5$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -2013,13 +2017,13 @@ function ItemTooltip({ item, isEquipped }) {
                         ]
                     }, void 0, true, {
                         fileName: "[project]/apps/web/src/components/InventoryPanel.tsx",
-                        lineNumber: 69,
+                        lineNumber: 72,
                         columnNumber: 11
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/apps/web/src/components/InventoryPanel.tsx",
-                lineNumber: 67,
+                lineNumber: 70,
                 columnNumber: 9
             }, this),
             item.bonusDef > 0 && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$15$2e$5$2e$15_react$2d$dom$40$19$2e$2$2e$5_react$40$19$2e$2$2e$5_$5f$react$40$19$2e$2$2e$5$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2029,7 +2033,7 @@ function ItemTooltip({ item, isEquipped }) {
                         children: "DEF"
                     }, void 0, false, {
                         fileName: "[project]/apps/web/src/components/InventoryPanel.tsx",
-                        lineNumber: 74,
+                        lineNumber: 77,
                         columnNumber: 11
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$15$2e$5$2e$15_react$2d$dom$40$19$2e$2$2e$5_react$40$19$2e$2$2e$5_$5f$react$40$19$2e$2$2e$5$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -2042,13 +2046,13 @@ function ItemTooltip({ item, isEquipped }) {
                         ]
                     }, void 0, true, {
                         fileName: "[project]/apps/web/src/components/InventoryPanel.tsx",
-                        lineNumber: 75,
+                        lineNumber: 78,
                         columnNumber: 11
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/apps/web/src/components/InventoryPanel.tsx",
-                lineNumber: 73,
+                lineNumber: 76,
                 columnNumber: 9
             }, this),
             item.bonusHp > 0 && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$15$2e$5$2e$15_react$2d$dom$40$19$2e$2$2e$5_react$40$19$2e$2$2e$5_$5f$react$40$19$2e$2$2e$5$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2058,7 +2062,7 @@ function ItemTooltip({ item, isEquipped }) {
                         children: "HP"
                     }, void 0, false, {
                         fileName: "[project]/apps/web/src/components/InventoryPanel.tsx",
-                        lineNumber: 80,
+                        lineNumber: 83,
                         columnNumber: 11
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$15$2e$5$2e$15_react$2d$dom$40$19$2e$2$2e$5_react$40$19$2e$2$2e$5_$5f$react$40$19$2e$2$2e$5$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -2071,13 +2075,13 @@ function ItemTooltip({ item, isEquipped }) {
                         ]
                     }, void 0, true, {
                         fileName: "[project]/apps/web/src/components/InventoryPanel.tsx",
-                        lineNumber: 81,
+                        lineNumber: 84,
                         columnNumber: 11
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/apps/web/src/components/InventoryPanel.tsx",
-                lineNumber: 79,
+                lineNumber: 82,
                 columnNumber: 9
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$15$2e$5$2e$15_react$2d$dom$40$19$2e$2$2e$5_react$40$19$2e$2$2e$5_$5f$react$40$19$2e$2$2e$5$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2092,7 +2096,7 @@ function ItemTooltip({ item, isEquipped }) {
                         ]
                     }, void 0, true, {
                         fileName: "[project]/apps/web/src/components/InventoryPanel.tsx",
-                        lineNumber: 87,
+                        lineNumber: 90,
                         columnNumber: 11
                     }, this),
                     item.upgradeLevel > 0 && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$15$2e$5$2e$15_react$2d$dom$40$19$2e$2$2e$5_react$40$19$2e$2$2e$5_$5f$react$40$19$2e$2$2e$5$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -2103,7 +2107,7 @@ function ItemTooltip({ item, isEquipped }) {
                         ]
                     }, void 0, true, {
                         fileName: "[project]/apps/web/src/components/InventoryPanel.tsx",
-                        lineNumber: 90,
+                        lineNumber: 93,
                         columnNumber: 11
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$15$2e$5$2e$15_react$2d$dom$40$19$2e$2$2e$5_react$40$19$2e$2$2e$5_$5f$react$40$19$2e$2$2e$5$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -2111,7 +2115,7 @@ function ItemTooltip({ item, isEquipped }) {
                         children: typeHints[item.type] || item.type
                     }, void 0, false, {
                         fileName: "[project]/apps/web/src/components/InventoryPanel.tsx",
-                        lineNumber: 92,
+                        lineNumber: 95,
                         columnNumber: 9
                     }, this),
                     isEquipped && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$15$2e$5$2e$15_react$2d$dom$40$19$2e$2$2e$5_react$40$19$2e$2$2e$5_$5f$react$40$19$2e$2$2e$5$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -2119,19 +2123,19 @@ function ItemTooltip({ item, isEquipped }) {
                         children: "✓ Currently Equipped"
                     }, void 0, false, {
                         fileName: "[project]/apps/web/src/components/InventoryPanel.tsx",
-                        lineNumber: 93,
+                        lineNumber: 96,
                         columnNumber: 24
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/apps/web/src/components/InventoryPanel.tsx",
-                lineNumber: 85,
+                lineNumber: 88,
                 columnNumber: 7
             }, this)
         ]
     }, void 0, true, {
         fileName: "[project]/apps/web/src/components/InventoryPanel.tsx",
-        lineNumber: 41,
+        lineNumber: 44,
         columnNumber: 5
     }, this);
 }
@@ -2140,6 +2144,23 @@ function InventoryPanel({ user, onUpdate }) {
     const [activeTab, setActiveTab] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$15$2e$5$2e$15_react$2d$dom$40$19$2e$2$2e$5_react$40$19$2e$2$2e$5_$5f$react$40$19$2e$2$2e$5$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])("inventory");
     const [actionLoading, setActionLoading] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$15$2e$5$2e$15_react$2d$dom$40$19$2e$2$2e$5_react$40$19$2e$2$2e$5_$5f$react$40$19$2e$2$2e$5$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])(null);
     const [toast, setToast] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$15$2e$5$2e$15_react$2d$dom$40$19$2e$2$2e$5_react$40$19$2e$2$2e$5_$5f$react$40$19$2e$2$2e$5$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])(null);
+    const [flipTooltip, setFlipTooltip] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$15$2e$5$2e$15_react$2d$dom$40$19$2e$2$2e$5_react$40$19$2e$2$2e$5_$5f$react$40$19$2e$2$2e$5$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])(new Set());
+    function handleCardMouseEnter(itemId) {
+        const card = document.querySelector(`[data-item-id="${itemId}"]`);
+        if (card) {
+            const rect = card.getBoundingClientRect();
+            if (rect.top < 200) {
+                setFlipTooltip((prev)=>new Set(prev).add(itemId));
+            }
+        }
+    }
+    function handleCardMouseLeave(itemId) {
+        setFlipTooltip((prev)=>{
+            const next = new Set(prev);
+            next.delete(itemId);
+            return next;
+        });
+    }
     const items = user.inventory || [];
     const equipped = items.filter((i)=>i.isEquipped);
     const unequipped = items.filter((i)=>!i.isEquipped);
@@ -2214,18 +2235,23 @@ function InventoryPanel({ user, onUpdate }) {
     }
     function renderItemCard(item, isEquippedTab) {
         const isConsumable = consumableTypes.has(item.type);
+        const flipped = flipTooltip.has(item.id);
         return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$15$2e$5$2e$15_react$2d$dom$40$19$2e$2$2e$5_react$40$19$2e$2$2e$5_$5f$react$40$19$2e$2$2e$5$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-            className: `${__TURBOPACK__imported__module__$5b$project$5d2f$apps$2f$web$2f$src$2f$components$2f$InventoryPanel$2e$module$2e$css__$5b$app$2d$ssr$5d$__$28$css__module$29$__["default"].itemCard} ${isEquippedTab ? __TURBOPACK__imported__module__$5b$project$5d2f$apps$2f$web$2f$src$2f$components$2f$InventoryPanel$2e$module$2e$css__$5b$app$2d$ssr$5d$__$28$css__module$29$__["default"].equipped : ""}`,
+            "data-item-card": true,
+            "data-item-id": item.id,
+            className: `${__TURBOPACK__imported__module__$5b$project$5d2f$apps$2f$web$2f$src$2f$components$2f$InventoryPanel$2e$module$2e$css__$5b$app$2d$ssr$5d$__$28$css__module$29$__["default"].itemCard} ${isEquippedTab ? __TURBOPACK__imported__module__$5b$project$5d2f$apps$2f$web$2f$src$2f$components$2f$InventoryPanel$2e$module$2e$css__$5b$app$2d$ssr$5d$__$28$css__module$29$__["default"].equipped : ""} ${flipped ? __TURBOPACK__imported__module__$5b$project$5d2f$apps$2f$web$2f$src$2f$components$2f$InventoryPanel$2e$module$2e$css__$5b$app$2d$ssr$5d$__$28$css__module$29$__["default"].cardTooltipFlip : ""}`,
             style: {
                 borderColor: rarityColors[item.rarity] || "#444"
             },
+            onMouseEnter: ()=>handleCardMouseEnter(item.id),
+            onMouseLeave: ()=>handleCardMouseLeave(item.id),
             children: [
                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$15$2e$5$2e$15_react$2d$dom$40$19$2e$2$2e$5_react$40$19$2e$2$2e$5_$5f$react$40$19$2e$2$2e$5$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                     className: __TURBOPACK__imported__module__$5b$project$5d2f$apps$2f$web$2f$src$2f$components$2f$InventoryPanel$2e$module$2e$css__$5b$app$2d$ssr$5d$__$28$css__module$29$__["default"].itemIcon,
                     children: typeIcons[item.type] || "📦"
                 }, void 0, false, {
                     fileName: "[project]/apps/web/src/components/InventoryPanel.tsx",
-                    lineNumber: 174,
+                    lineNumber: 201,
                     columnNumber: 9
                 }, this),
                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$15$2e$5$2e$15_react$2d$dom$40$19$2e$2$2e$5_react$40$19$2e$2$2e$5_$5f$react$40$19$2e$2$2e$5$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -2234,7 +2260,7 @@ function InventoryPanel({ user, onUpdate }) {
                     children: item.name
                 }, void 0, false, {
                     fileName: "[project]/apps/web/src/components/InventoryPanel.tsx",
-                    lineNumber: 177,
+                    lineNumber: 204,
                     columnNumber: 9
                 }, this),
                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$15$2e$5$2e$15_react$2d$dom$40$19$2e$2$2e$5_react$40$19$2e$2$2e$5_$5f$react$40$19$2e$2$2e$5$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -2245,7 +2271,7 @@ function InventoryPanel({ user, onUpdate }) {
                     children: item.rarity
                 }, void 0, false, {
                     fileName: "[project]/apps/web/src/components/InventoryPanel.tsx",
-                    lineNumber: 178,
+                    lineNumber: 205,
                     columnNumber: 9
                 }, this),
                 item.quantity > 1 && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$15$2e$5$2e$15_react$2d$dom$40$19$2e$2$2e$5_react$40$19$2e$2$2e$5_$5f$react$40$19$2e$2$2e$5$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -2256,7 +2282,7 @@ function InventoryPanel({ user, onUpdate }) {
                     ]
                 }, void 0, true, {
                     fileName: "[project]/apps/web/src/components/InventoryPanel.tsx",
-                    lineNumber: 182,
+                    lineNumber: 209,
                     columnNumber: 11
                 }, this),
                 item.upgradeLevel > 0 && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$15$2e$5$2e$15_react$2d$dom$40$19$2e$2$2e$5_react$40$19$2e$2$2e$5_$5f$react$40$19$2e$2$2e$5$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -2267,7 +2293,7 @@ function InventoryPanel({ user, onUpdate }) {
                     ]
                 }, void 0, true, {
                     fileName: "[project]/apps/web/src/components/InventoryPanel.tsx",
-                    lineNumber: 185,
+                    lineNumber: 212,
                     columnNumber: 11
                 }, this),
                 !isEquippedTab && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$15$2e$5$2e$15_react$2d$dom$40$19$2e$2$2e$5_react$40$19$2e$2$2e$5_$5f$react$40$19$2e$2$2e$5$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2280,7 +2306,7 @@ function InventoryPanel({ user, onUpdate }) {
                             children: actionLoading === item.id ? "..." : "Use"
                         }, void 0, false, {
                             fileName: "[project]/apps/web/src/components/InventoryPanel.tsx",
-                            lineNumber: 191,
+                            lineNumber: 218,
                             columnNumber: 15
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$15$2e$5$2e$15_react$2d$dom$40$19$2e$2$2e$5_react$40$19$2e$2$2e$5_$5f$react$40$19$2e$2$2e$5$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -2290,13 +2316,13 @@ function InventoryPanel({ user, onUpdate }) {
                             children: actionLoading === item.id ? "..." : "Sell"
                         }, void 0, false, {
                             fileName: "[project]/apps/web/src/components/InventoryPanel.tsx",
-                            lineNumber: 199,
+                            lineNumber: 226,
                             columnNumber: 13
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/apps/web/src/components/InventoryPanel.tsx",
-                    lineNumber: 189,
+                    lineNumber: 216,
                     columnNumber: 11
                 }, this),
                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$15$2e$5$2e$15_react$2d$dom$40$19$2e$2$2e$5_react$40$19$2e$2$2e$5_$5f$react$40$19$2e$2$2e$5$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(ItemTooltip, {
@@ -2304,13 +2330,13 @@ function InventoryPanel({ user, onUpdate }) {
                     isEquipped: isEquippedTab
                 }, void 0, false, {
                     fileName: "[project]/apps/web/src/components/InventoryPanel.tsx",
-                    lineNumber: 209,
+                    lineNumber: 236,
                     columnNumber: 9
                 }, this)
             ]
         }, item.id, true, {
             fileName: "[project]/apps/web/src/components/InventoryPanel.tsx",
-            lineNumber: 169,
+            lineNumber: 192,
             columnNumber: 7
         }, this);
     }
@@ -2322,7 +2348,7 @@ function InventoryPanel({ user, onUpdate }) {
                 children: toast.msg
             }, void 0, false, {
                 fileName: "[project]/apps/web/src/components/InventoryPanel.tsx",
-                lineNumber: 217,
+                lineNumber: 244,
                 columnNumber: 9
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$15$2e$5$2e$15_react$2d$dom$40$19$2e$2$2e$5_react$40$19$2e$2$2e$5_$5f$react$40$19$2e$2$2e$5$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("h2", {
@@ -2330,7 +2356,7 @@ function InventoryPanel({ user, onUpdate }) {
                 children: "🎒 Inventory"
             }, void 0, false, {
                 fileName: "[project]/apps/web/src/components/InventoryPanel.tsx",
-                lineNumber: 222,
+                lineNumber: 249,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$15$2e$5$2e$15_react$2d$dom$40$19$2e$2$2e$5_react$40$19$2e$2$2e$5_$5f$react$40$19$2e$2$2e$5$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2346,7 +2372,7 @@ function InventoryPanel({ user, onUpdate }) {
                         ]
                     }, void 0, true, {
                         fileName: "[project]/apps/web/src/components/InventoryPanel.tsx",
-                        lineNumber: 225,
+                        lineNumber: 252,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$15$2e$5$2e$15_react$2d$dom$40$19$2e$2$2e$5_react$40$19$2e$2$2e$5_$5f$react$40$19$2e$2$2e$5$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -2359,13 +2385,13 @@ function InventoryPanel({ user, onUpdate }) {
                         ]
                     }, void 0, true, {
                         fileName: "[project]/apps/web/src/components/InventoryPanel.tsx",
-                        lineNumber: 231,
+                        lineNumber: 258,
                         columnNumber: 9
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/apps/web/src/components/InventoryPanel.tsx",
-                lineNumber: 224,
+                lineNumber: 251,
                 columnNumber: 7
             }, this),
             activeTab === "inventory" && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$15$2e$5$2e$15_react$2d$dom$40$19$2e$2$2e$5_react$40$19$2e$2$2e$5_$5f$react$40$19$2e$2$2e$5$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$15$2e$5$2e$15_react$2d$dom$40$19$2e$2$2e$5_react$40$19$2e$2$2e$5_$5f$react$40$19$2e$2$2e$5$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Fragment"], {
@@ -2378,12 +2404,12 @@ function InventoryPanel({ user, onUpdate }) {
                                 children: t === "ALL" ? "All" : typeIcons[t] || t
                             }, t, false, {
                                 fileName: "[project]/apps/web/src/components/InventoryPanel.tsx",
-                                lineNumber: 243,
+                                lineNumber: 270,
                                 columnNumber: 15
                             }, this))
                     }, void 0, false, {
                         fileName: "[project]/apps/web/src/components/InventoryPanel.tsx",
-                        lineNumber: 241,
+                        lineNumber: 268,
                         columnNumber: 11
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$15$2e$5$2e$15_react$2d$dom$40$19$2e$2$2e$5_react$40$19$2e$2$2e$5_$5f$react$40$19$2e$2$2e$5$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2394,14 +2420,14 @@ function InventoryPanel({ user, onUpdate }) {
                                 children: "No items in this category"
                             }, void 0, false, {
                                 fileName: "[project]/apps/web/src/components/InventoryPanel.tsx",
-                                lineNumber: 255,
+                                lineNumber: 282,
                                 columnNumber: 15
                             }, this),
                             filteredItems.map((item)=>renderItemCard(item, false))
                         ]
                     }, void 0, true, {
                         fileName: "[project]/apps/web/src/components/InventoryPanel.tsx",
-                        lineNumber: 253,
+                        lineNumber: 280,
                         columnNumber: 11
                     }, this)
                 ]
@@ -2414,20 +2440,20 @@ function InventoryPanel({ user, onUpdate }) {
                         children: "No equipment equipped"
                     }, void 0, false, {
                         fileName: "[project]/apps/web/src/components/InventoryPanel.tsx",
-                        lineNumber: 264,
+                        lineNumber: 291,
                         columnNumber: 37
                     }, this),
                     equipped.map((item)=>renderItemCard(item, true))
                 ]
             }, void 0, true, {
                 fileName: "[project]/apps/web/src/components/InventoryPanel.tsx",
-                lineNumber: 263,
+                lineNumber: 290,
                 columnNumber: 9
             }, this)
         ]
     }, void 0, true, {
         fileName: "[project]/apps/web/src/components/InventoryPanel.tsx",
-        lineNumber: 215,
+        lineNumber: 242,
         columnNumber: 5
     }, this);
 }
