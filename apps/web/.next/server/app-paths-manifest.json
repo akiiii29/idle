@@ -1,7 +1,11 @@
 {
   "/api/auto-hunt/[userId]/route": "app/api/auto-hunt/[userId]/route.js",
-  "/api/hospital/[userId]/route": "app/api/hospital/[userId]/route.js",
-  "/api/hospital/revive/route": "app/api/hospital/revive/route.js",
+  "/api/item/open-chest/route": "app/api/item/open-chest/route.js",
+  "/api/item/sell/route": "app/api/item/sell/route.js",
+  "/api/profile/[userId]/route": "app/api/profile/[userId]/route.js",
+  "/api/shop/buy/route": "app/api/shop/buy/route.js",
+  "/api/shop/route": "app/api/shop/route.js",
+  "/api/stats/[userId]/route": "app/api/stats/[userId]/route.js",
   "/api/user/[id]/route": "app/api/user/[id]/route.js",
   "/page": "app/page.js"
 }

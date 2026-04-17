@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { computeCombatStats, enrichBeast } from "@game/core";
 
 const TAVERN_HEAL_INTERVAL_MS = 15_000;
 const TAVERN_GOLD_PER_HP = 0.2;
@@ -9,7 +10,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
   const user = await prisma.user.findUnique({
     where: { id: userId },
-    include: { inventory: true },
+    include: { inventory: true, beasts: true, skills: { include: { skill: true } } },
   });
   if (!user) {
     return NextResponse.json({ error: "User not found" }, { status: 404 });
@@ -19,7 +20,27 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   const isResting = user.tavernUntil && user.tavernUntil > now;
   const remainingMs = isResting && user.tavernUntil ? user.tavernUntil.getTime() - now.getTime() : 0;
 
-  const stats: any = { final: { maxHp: user.maxHp } };
+  const equippedItems = user.inventory?.filter((i: any) => i.isEquipped) ?? [];
+  const equippedPets = user.beasts?.filter((b: any) => b.isEquipped).map((b: any) => enrichBeast(b)) ?? [];
+  const stats = computeCombatStats(
+    {
+      str: user.str,
+      agi: user.agi,
+      maxHp: user.maxHp,
+      luck: user.luck ?? 0,
+      talentDps: user.talentDps ?? 0,
+      talentTank: user.talentTank ?? 0,
+      talentSupport: user.talentSupport ?? 0,
+      talentBurn: user.talentBurn ?? 0,
+      talentPoison: user.talentPoison ?? 0,
+      title: user.title ?? null,
+    },
+    equippedItems,
+    equippedPets,
+    [],
+    undefined
+  );
+
   const maxHp = stats.final.maxHp;
   const missingHp = maxHp - user.currentHp;
 
@@ -45,7 +66,10 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Missing userId" }, { status: 400 });
   }
 
-  const user = await prisma.user.findUnique({ where: { id: userId } });
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    include: { inventory: true, beasts: true, skills: { include: { skill: true } } },
+  });
   if (!user) {
     return NextResponse.json({ error: "User not found" }, { status: 404 });
   }
@@ -56,11 +80,51 @@ export async function POST(request: NextRequest) {
     if (!user.tavernUntil || user.tavernUntil <= now) {
       return NextResponse.json({ error: "Not currently resting" }, { status: 400 });
     }
+
+    // Calculate how much HP to heal based on elapsed time
+    // Rate: 30 HP per minute = 0.5 HP per second
+    const startTime = user.lastHpUpdatedAt ? new Date(user.lastHpUpdatedAt).getTime() : (user.tavernUntil.getTime() - (user.tavernUntil.getTime() - now.getTime()));
+    const paidRestMs = user.tavernUntil.getTime() - startTime;
+    const elapsedMs = Math.min(now.getTime() - startTime, paidRestMs);
+    const healRateHpPerSec = 30 / 60; // 0.5 HP/sec
+    const actualHealHp = Math.floor(elapsedMs * healRateHpPerSec / 1000);
+    const newHp = Math.min(user.currentHp + actualHealHp, user.currentHp + 999999); // cap at effectively max
+
+    // Get computed maxHp
+    const equippedItems = user.inventory?.filter((i: any) => i.isEquipped) ?? [];
+    const equippedPets = user.beasts?.filter((b: any) => b.isEquipped).map((b: any) => enrichBeast(b)) ?? [];
+    const stats = computeCombatStats(
+      {
+        str: user.str,
+        agi: user.agi,
+        maxHp: user.maxHp,
+        luck: user.luck ?? 0,
+        talentDps: user.talentDps ?? 0,
+        talentTank: user.talentTank ?? 0,
+        talentSupport: user.talentSupport ?? 0,
+        talentBurn: user.talentBurn ?? 0,
+        talentPoison: user.talentPoison ?? 0,
+        title: user.title ?? null,
+      },
+      equippedItems,
+      equippedPets,
+      [],
+      undefined
+    );
+    const maxHp = stats.final.maxHp;
+    const finalHp = Math.min(newHp, maxHp);
+    const actualHealed = finalHp - user.currentHp;
+
     await prisma.user.update({
       where: { id: userId },
-      data: { tavernUntil: null, isBusy: false, busyUntil: null },
+      data: {
+        currentHp: finalHp,
+        tavernUntil: null,
+        isBusy: false,
+        busyUntil: null,
+      },
     });
-    return NextResponse.json({ success: true, message: "Left the tavern." });
+    return NextResponse.json({ success: true, message: `Left the tavern. Healed ${actualHealed} HP.`, healedHp: actualHealed, newHp: finalHp, maxHp });
   }
 
   if (action === "gamble") {
@@ -117,7 +181,28 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Already resting" }, { status: 400 });
   }
 
-  const maxHp = user.maxHp;
+  const equippedItems = user.inventory?.filter((i: any) => i.isEquipped) ?? [];
+  const equippedPets = user.beasts?.filter((b: any) => b.isEquipped).map((b: any) => enrichBeast(b)) ?? [];
+  const stats = computeCombatStats(
+    {
+      str: user.str,
+      agi: user.agi,
+      maxHp: user.maxHp,
+      luck: user.luck ?? 0,
+      talentDps: user.talentDps ?? 0,
+      talentTank: user.talentTank ?? 0,
+      talentSupport: user.talentSupport ?? 0,
+      talentBurn: user.talentBurn ?? 0,
+      talentPoison: user.talentPoison ?? 0,
+      title: user.title ?? null,
+    },
+    equippedItems,
+    equippedPets,
+    [],
+    undefined
+  );
+
+  const maxHp = stats.final.maxHp;
   const missingHp = maxHp - user.currentHp;
   if (missingHp <= 0) {
     return NextResponse.json({ error: "HP already full" }, { status: 400 });

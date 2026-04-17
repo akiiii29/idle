@@ -2,11 +2,12 @@
 
 import styles from "./SidebarNav.module.css";
 
-type NavItem = "hunt" | "stats" | "inventory" | "pets" | "shop" | "dungeon" | "hospital" | "tavern" | "practice" | "autohunt";
+type NavItem = "hunt" | "stats" | "inventory" | "pets" | "shop" | "dungeon" | "hospital" | "tavern" | "practice" | "autohunt" | "upgrade" | "skills" | "quests" | "achievements" | "profile" | "synergies" | "synergy";
 
 const navItems: { id: NavItem; icon: string; label: string }[] = [
   { id: "hunt", icon: "⚔️", label: "Hunt" },
   { id: "stats", icon: "📊", label: "Stats" },
+  { id: "profile", icon: "📇", label: "Profile" },
   { id: "inventory", icon: "🎒", label: "Inventory" },
   { id: "pets", icon: "🐾", label: "Pets" },
   { id: "shop", icon: "🏪", label: "Shop" },
@@ -15,6 +16,12 @@ const navItems: { id: NavItem; icon: string; label: string }[] = [
   { id: "tavern", icon: "🍺", label: "Tavern" },
   { id: "practice", icon: "🎯", label: "Practice" },
   { id: "autohunt", icon: "⚡", label: "Auto-Hunt" },
+  { id: "upgrade", icon: "⚒️", label: "Upgrade" },
+  { id: "skills", icon: "🏮", label: "Skills" },
+  { id: "quests", icon: "📜", label: "Quests" },
+  { id: "achievements", icon: "🏆", label: "Titles" },
+  { id: "synergies", icon: "📖", label: "Synergies" },
+  { id: "synergy", icon: "🌀", label: "My Synergies" },
 ];
 
 export default function SidebarNav({

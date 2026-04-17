@@ -70,29 +70,57 @@ export default function StatsPanel({ user, isCompact = false }: { user: any; isC
     <div className={styles.fullPanel}>
       <h2 className={styles.title}>📊 Combat Stats</h2>
 
+      {/* ── HP / EXP Progress Bars ─────────────────────── */}
+      <div className={styles.progressSection}>
+        <div className={styles.progressCard}>
+          <div className={styles.progressLabel}>
+            <span>❤️ HP</span>
+            <span>{user.currentHp} / {stats?.final?.maxHp ?? user.maxHp}</span>
+          </div>
+          <div className="stat-bar">
+            <div
+              className={`stat-bar-fill ${((user.currentHp / (stats?.final?.maxHp ?? user.maxHp)) < 0.3 ? "hp-low" : "hp")}`}
+              style={{ width: `${Math.min(100, (user.currentHp / (stats?.final?.maxHp ?? user.maxHp)) * 100)}%` }}
+            />
+          </div>
+        </div>
+        <div className={styles.progressCard}>
+          <div className={styles.progressLabel}>
+            <span>⭐ EXP</span>
+            <span>{user.exp} / {user.level * 100 + 100}</span>
+          </div>
+          <div className="stat-bar">
+            <div
+              className="stat-bar-fill exp"
+              style={{ width: `${Math.min(100, (user.exp / (user.level * 100 + 100)) * 100)}%` }}
+            />
+          </div>
+        </div>
+      </div>
+
       {/* ── Base Stats ─────────────────────────────────────── */}
       <div className={styles.section}>
-        <h3 className={styles.sectionTitle}>Base Stats</h3>
+        <h3 className={styles.sectionTitle}>Base Attributes</h3>
         <div className={styles.bigStatGrid}>
-          <div className={styles.bigStatCard}>
+          <div className={`${styles.bigStatCard} card-3d`}>
             <span className={styles.bigStatLabel}>💪 STR</span>
             <span className={`${styles.bigStatValue} ${styles.strColor}`}>{user.str}</span>
-            <span className={styles.bigStatSub}>Base Strength</span>
+            <span className={styles.bigStatSub}>Strength</span>
           </div>
-          <div className={styles.bigStatCard}>
+          <div className={`${styles.bigStatCard} card-3d`}>
             <span className={styles.bigStatLabel}>⚡ AGI</span>
             <span className={`${styles.bigStatValue} ${styles.agiColor}`}>{user.agi}</span>
-            <span className={styles.bigStatSub}>Base Agility</span>
+            <span className={styles.bigStatSub}>Agility</span>
           </div>
-          <div className={styles.bigStatCard}>
+          <div className={`${styles.bigStatCard} card-3d`}>
             <span className={styles.bigStatLabel}>🍀 LUCK</span>
             <span className={`${styles.bigStatValue} ${styles.luckColor}`}>{user.luck}</span>
-            <span className={styles.bigStatSub}>Base Luck</span>
+            <span className={styles.bigStatSub}>Luck</span>
           </div>
-          <div className={styles.bigStatCard}>
+          <div className={`${styles.bigStatCard} card-3d`}>
             <span className={styles.bigStatLabel}>❤️ HP</span>
             <span className={`${styles.bigStatValue} ${styles.hpColor}`}>{stats?.final?.maxHp ?? user.maxHp}</span>
-            <span className={styles.bigStatSub}>Max HP (with buffs)</span>
+            <span className={styles.bigStatSub}>Max HP</span>
           </div>
         </div>
       </div>
@@ -101,33 +129,33 @@ export default function StatsPanel({ user, isCompact = false }: { user: any; isC
       <div className={styles.section}>
         <h3 className={styles.sectionTitle}>Combat Ratings</h3>
         <div className={styles.combatGrid}>
-          <div className={styles.combatCard}>
+          <div className={`${styles.combatCard} card-3d`}>
             <span className={styles.combatLabel}>⚔️ ATK</span>
             <span className={styles.combatValue}>{stats?.final?.attack ?? 0}</span>
           </div>
-          <div className={styles.combatCard}>
+          <div className={`${styles.combatCard} card-3d`}>
             <span className={styles.combatLabel}>🛡️ DEF</span>
             <span className={styles.combatValue}>{stats?.final?.defense ?? 0}</span>
           </div>
-          <div className={styles.combatCard}>
+          <div className={`${styles.combatCard} card-3d`}>
             <span className={styles.combatLabel}>💨 SPD</span>
             <span className={styles.combatValue}>{stats?.final?.speed ?? 100}</span>
           </div>
         </div>
         <div className={styles.pctGrid}>
-          <div className={styles.pctCard}>
+          <div className={`${styles.pctCard} card-3d`}>
             <span className={styles.pctLabel}>CRIT</span>
             <span className={styles.pctValue}>{(critChance * 100).toFixed(1)}%</span>
           </div>
-          <div className={styles.pctCard}>
+          <div className={`${styles.pctCard} card-3d`}>
             <span className={styles.pctLabel}>CRIT DMG</span>
             <span className={styles.pctValue}>{(critDmg * 100).toFixed(0)}%</span>
           </div>
-          <div className={styles.pctCard}>
+          <div className={`${styles.pctCard} card-3d`}>
             <span className={styles.pctLabel}>DODGE</span>
             <span className={styles.pctValue}>{(dodgeChance * 100).toFixed(1)}%</span>
           </div>
-          <div className={styles.pctCard}>
+          <div className={`${styles.pctCard} card-3d`}>
             <span className={styles.pctLabel}>BLOCK</span>
             <span className={styles.pctValue}>{(blockChance * 100).toFixed(1)}%</span>
           </div>
@@ -140,19 +168,19 @@ export default function StatsPanel({ user, isCompact = false }: { user: any; isC
       {/* ── Talents ────────────────────────────────────────── */}
       {stats?.talentBonuses && (
         <div className={styles.section}>
-          <h3 className={styles.sectionTitle}>Talents</h3>
+          <h3 className={styles.sectionTitle}>Talent Progress</h3>
           <div className={styles.talentGrid}>
-            <div className={styles.talentCard}>
+            <div className={`${styles.talentCard} card-3d`}>
               <span className={styles.talentIcon}>⚔️</span>
               <span className={styles.talentValue}>{stats.talentBonuses.dps ?? 0}</span>
               <span className={styles.talentLabel}>DPS</span>
             </div>
-            <div className={styles.talentCard}>
+            <div className={`${styles.talentCard} card-3d`}>
               <span className={styles.talentIcon}>🛡️</span>
               <span className={styles.talentValue}>{stats.talentBonuses.tank ?? 0}</span>
               <span className={styles.talentLabel}>Tank</span>
             </div>
-            <div className={styles.talentCard}>
+            <div className={`${styles.talentCard} card-3d`}>
               <span className={styles.talentIcon}>💚</span>
               <span className={styles.talentValue}>{stats.talentBonuses.support ?? 0}</span>
               <span className={styles.talentLabel}>Support</span>

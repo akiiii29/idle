@@ -19,8 +19,28 @@
   flex: 1;
   gap: 1rem;
   padding: 1rem;
+  animation: .25s both page-module__YnyroG__panel-enter;
   display: flex;
   overflow-y: auto;
+}
+
+@keyframes page-module__YnyroG__panel-enter {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 768px) {
+  .page-module__YnyroG__content {
+    gap: .75rem;
+    padding: .75rem .75rem 5rem;
+  }
 }
 
 .page-module__YnyroG__loginScreen {
@@ -75,6 +95,18 @@
 
 .page-module__YnyroG__loginInput::placeholder {
   color: var(--text-dim);
+}
+
+@media (max-width: 480px) {
+  .page-module__YnyroG__loginCard {
+    min-width: unset;
+    width: 90%;
+    padding: 2rem 1.5rem;
+  }
+
+  .page-module__YnyroG__loginTitle {
+    font-size: 2rem;
+  }
 }
 
 /*# sourceMappingURL=apps_web_src_app_page_module_css_bad6b30c._.single.css.map*/

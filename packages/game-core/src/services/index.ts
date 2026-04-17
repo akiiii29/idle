@@ -11,3 +11,33 @@ export { applyRelicsBeforeCombat, applyRelicsOnTurn, applyRelicsOnKill } from ".
 export { dealDamage, processDamage, applyBleed, healUnit, reflectDamage, grantExtraTurn, executeUnit, applyRelicEffect, handleRelicTrigger } from "./relic-engine";
 export { SYNERGY_POOL, getActiveSynergies as getActiveRelicSynergies, applySynergyEffects } from "./relic-synergy";
 export { simulateCombat } from "./combat-engine";
+export {
+  SCRAP_VALUE_IN_GOLD,
+  MAX_UPGRADE_LEVEL,
+  GEAR_TYPES,
+  getRarityMultiplier,
+  getUpgradeCost,
+  getBaseSuccessRate,
+  getUpgradeSuccessRate,
+  getEffectiveSuccessRate,
+  previewUpgradePayment,
+  calculateScrapValue,
+  sortGearKeepBestFirst,
+} from "./upgrade-service";
+export {
+  SHOP_CATALOG,
+  CHEST_CATALOG,
+  DUNGEON_BUFF_ITEMS,
+  SHOP_REFRESH_GOLD,
+  getCatalogEntry,
+  getChestEntry,
+  rollEquipmentRarityFn,
+  getEqPrice,
+  getAccessoryPrice,
+  PET_SHOP_PRICES,
+  getDailySkills,
+  type ShopCatalogEntry,
+  type EqShopEntry,
+} from "./shop-service";
+export { QUESTS, getQuest, getQuestsByType, type QuestDefinition } from "./quest-service";
+export { getVnDayString, msUntilNextVnMidnight, isDifferentVnDay, msUntilNextVnMidnightFrom } from "../utils/time";

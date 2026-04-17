@@ -69,7 +69,12 @@
       "Bash(curl -s -X GET \"http://localhost:3000/api/practice/test-user\" -o /dev/null -w \"%{http_code}\\\\n\")",
       "Bash(curl -v \"http://localhost:3000/api/hospital/test-user-id-here\")",
       "Bash(curl -s \"http://localhost:3000/api/tavern/a\")",
-      "Bash(curl -sv \"http://localhost:3000/api/tavern/a\")"
+      "Bash(curl -sv \"http://localhost:3000/api/tavern/a\")",
+      "Bash(pnpm build:*)",
+      "Bash(npx next:*)",
+      "Bash(rm:*)",
+      "Bash(ls \"D:/OneDrive - Patroids Creative Works Pte Ltd/idle/packages/game-core/\"*.tsbuildinfo)",
+      "Bash(cd D:/OneDrive - Patroids Creative Works Pte Ltd/idle)"
     ]
   }
 }

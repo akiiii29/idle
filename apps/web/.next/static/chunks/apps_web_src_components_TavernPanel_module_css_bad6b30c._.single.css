@@ -69,13 +69,14 @@
 
 .TavernPanel-module__Pr16-q__hpBar {
   background: var(--bg-primary);
+  border: 1px solid var(--border);
   border-radius: 5px;
   height: 10px;
   overflow: hidden;
 }
 
 .TavernPanel-module__Pr16-q__hpFill {
-  background: var(--hp-green);
+  background: linear-gradient(90deg, var(--hp-green), #4ade80);
   border-radius: 5px;
   height: 100%;
   transition: width .5s;
@@ -181,7 +182,14 @@
   flex-direction: column;
   gap: .6rem;
   padding: 1rem;
+  transition: transform .2s cubic-bezier(.34, 1.56, .64, 1), box-shadow .2s, border-color .2s;
   display: flex;
+}
+
+.TavernPanel-module__Pr16-q__restCard:hover {
+  border-color: var(--accent-gold);
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, .5);
 }
 
 .TavernPanel-module__Pr16-q__restCardHeader {
@@ -242,26 +250,42 @@
 }
 
 .TavernPanel-module__Pr16-q__startRestBtn {
-  background: var(--hp-green);
+  background: linear-gradient(135deg, var(--hp-green), #16a34a);
   color: #000;
+  border: 2px solid var(--hp-green);
+  box-shadow: 0 0 10px rgba(34, 197, 94, .3);
 }
 
 .TavernPanel-module__Pr16-q__startRestBtn:hover:not(:disabled) {
-  background: #16a34a;
+  transform: translateY(-2px)scale(1.03);
+  box-shadow: 0 0 20px rgba(34, 197, 94, .6), 0 6px 16px rgba(0, 0, 0, .4);
+}
+
+.TavernPanel-module__Pr16-q__startRestBtn:active:not(:disabled) {
+  transform: translateY(0)scale(.98);
 }
 
 .TavernPanel-module__Pr16-q__gambleBtn {
-  background: var(--accent-purple);
+  background: linear-gradient(135deg, var(--accent-purple), #7c3aed);
   color: #fff;
+  border: 2px solid var(--accent-purple);
+  box-shadow: 0 0 10px rgba(139, 92, 246, .3);
 }
 
 .TavernPanel-module__Pr16-q__gambleBtn:hover:not(:disabled) {
-  background: #7c3aed;
+  transform: translateY(-2px)scale(1.03);
+  box-shadow: 0 0 20px rgba(139, 92, 246, .6), 0 6px 16px rgba(0, 0, 0, .4);
+}
+
+.TavernPanel-module__Pr16-q__gambleBtn:active:not(:disabled) {
+  transform: translateY(0)scale(.98);
 }
 
 .TavernPanel-module__Pr16-q__startRestBtn:disabled, .TavernPanel-module__Pr16-q__gambleBtn:disabled {
   opacity: .5;
   cursor: not-allowed;
+  box-shadow: none;
+  transform: none;
 }
 
 .TavernPanel-module__Pr16-q__warning {

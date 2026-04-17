@@ -1,0 +1,3 @@
+{
+  "/api/synergy/[userId]/route": "app/api/synergy/[userId]/route.js"
+}

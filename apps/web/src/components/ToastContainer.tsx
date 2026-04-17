@@ -22,7 +22,7 @@ export default function ToastContainer() {
 
   useEffect(() => {
     const listener = (toast: Toast) => {
-      setToasts((prev) => [...prev, toast]);
+      setToasts((prev) => [toast, ...prev]);
       setTimeout(() => {
         setToasts((prev) => prev.filter((t) => t.id !== toast.id));
       }, 3000);

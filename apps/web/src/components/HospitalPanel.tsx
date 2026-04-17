@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import styles from "./HospitalPanel.module.css";
 
-export default function HospitalPanel({ user, onUpdate }: { user: any; onUpdate: () => void }) {
+export default function HospitalPanel({ user, onUpdate }: { user: any; onUpdate: (patch: any) => void }) {
   const [hospital, setHospital] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [reviving, setReviving] = useState(false);
@@ -40,8 +40,18 @@ export default function HospitalPanel({ user, onUpdate }: { user: any; onUpdate:
       const data = await res.json();
       if (res.ok) {
         showToast(`Revived! -${data.goldSpent} gold`, "success");
-        onUpdate();
-        fetchHospital();
+        onUpdate({ gold: (user.gold ?? 0) - data.goldSpent, hospitalUntil: null, currentHp: data.maxHp ?? data.newHp });
+        // Update local state directly instead of refetching
+        setHospital((prev: any) => {
+          if (!prev) return prev;
+          return {
+            ...prev,
+            inHospital: false,
+            currentHp: data.maxHp ?? data.newHp,
+            maxHp: data.maxHp ?? prev.maxHp,
+            remainingMs: 0,
+          };
+        });
       } else {
         showToast(data.error || "Failed", "error");
       }
@@ -87,11 +97,8 @@ export default function HospitalPanel({ user, onUpdate }: { user: any; onUpdate:
       <div className={styles.hpSection}>
         <div className={styles.hpBar}>
           <div
-            className={styles.hpFill}
-            style={{
-              width: `${hpPct}%`,
-              background: shouldShowHospital ? "var(--hp-red)" : "var(--hp-green)",
-            }}
+            className={`${styles.hpFill} ${shouldShowHospital ? styles.danger : ""}`}
+            style={{ width: `${hpPct}%` }}
           />
         </div>
         <div className={styles.hpText}>

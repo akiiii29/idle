@@ -69,15 +69,32 @@
 
 .HospitalPanel-module__X0w9hW__hpBar {
   background: var(--bg-primary);
+  border: 1px solid var(--border);
   border-radius: 6px;
   height: 12px;
   overflow: hidden;
 }
 
 .HospitalPanel-module__X0w9hW__hpFill {
+  background: linear-gradient(90deg, var(--hp-green), #4ade80);
   border-radius: 6px;
   height: 100%;
   transition: width .5s;
+}
+
+.HospitalPanel-module__X0w9hW__hpFill.HospitalPanel-module__X0w9hW__danger {
+  background: linear-gradient(90deg, var(--hp-red), #f87171);
+  animation: 1.5s ease-in-out infinite HospitalPanel-module__X0w9hW__pulse-danger;
+}
+
+@keyframes HospitalPanel-module__X0w9hW__pulse-danger {
+  0%, 100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: .75;
+  }
 }
 
 .HospitalPanel-module__X0w9hW__hpText {
@@ -105,7 +122,14 @@
   justify-content: space-between;
   align-items: center;
   padding: .75rem 1rem;
+  transition: transform .2s cubic-bezier(.34, 1.56, .64, 1), box-shadow .2s, border-color .2s;
   display: flex;
+}
+
+.HospitalPanel-module__X0w9hW__infoCard:hover {
+  border-color: var(--hp-red);
+  transform: translateY(-3px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, .4);
 }
 
 .HospitalPanel-module__X0w9hW__infoLabel {
@@ -123,25 +147,35 @@
 }
 
 .HospitalPanel-module__X0w9hW__reviveBtn {
-  background: var(--hp-green);
+  background: linear-gradient(135deg, var(--hp-green), #16a34a);
   color: #000;
+  border: 2px solid var(--hp-green);
   cursor: pointer;
-  border: none;
+  text-transform: uppercase;
+  letter-spacing: .05em;
   border-radius: 8px;
   width: 100%;
   padding: .85rem;
   font-size: .85rem;
   font-weight: 700;
-  transition: all .15s;
+  transition: all .2s cubic-bezier(.34, 1.56, .64, 1);
+  box-shadow: 0 0 12px rgba(34, 197, 94, .3);
 }
 
 .HospitalPanel-module__X0w9hW__reviveBtn:hover:not(:disabled) {
-  background: #16a34a;
+  transform: translateY(-2px)scale(1.02);
+  box-shadow: 0 0 24px rgba(34, 197, 94, .6), 0 8px 20px rgba(0, 0, 0, .4);
+}
+
+.HospitalPanel-module__X0w9hW__reviveBtn:active:not(:disabled) {
+  transform: translateY(0)scale(.98);
 }
 
 .HospitalPanel-module__X0w9hW__reviveBtn:disabled {
   opacity: .5;
   cursor: not-allowed;
+  box-shadow: none;
+  transform: none;
 }
 
 .HospitalPanel-module__X0w9hW__warning {

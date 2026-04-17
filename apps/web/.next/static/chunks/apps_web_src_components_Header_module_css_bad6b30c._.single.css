@@ -113,4 +113,71 @@
   color: var(--hp-red);
 }
 
+.Header-module__MytmHG__headerActions {
+  align-items: center;
+  gap: .5rem;
+  display: flex;
+}
+
+.Header-module__MytmHG__themeToggle {
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  cursor: pointer;
+  background: none;
+  border-radius: 8px;
+  justify-content: center;
+  align-items: center;
+  width: 36px;
+  height: 36px;
+  font-size: 1rem;
+  transition: all .15s;
+  display: flex;
+}
+
+.Header-module__MytmHG__themeToggle:hover {
+  border-color: var(--accent-gold);
+  color: var(--accent-gold);
+  transform: rotate(20deg);
+}
+
+@media (max-width: 768px) {
+  .Header-module__MytmHG__header {
+    flex-wrap: wrap;
+    gap: .75rem;
+    padding: .5rem .75rem;
+  }
+
+  .Header-module__MytmHG__logo {
+    font-size: 1.1rem;
+  }
+
+  .Header-module__MytmHG__playerInfo {
+    flex: 0 0 100%;
+    order: 3;
+    justify-content: space-around;
+  }
+
+  .Header-module__MytmHG__username {
+    font-size: .8rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .Header-module__MytmHG__header {
+    padding: .4rem .5rem;
+  }
+
+  .Header-module__MytmHG__playerInfo {
+    gap: .5rem;
+  }
+
+  .Header-module__MytmHG__stat {
+    min-width: 40px;
+  }
+
+  .Header-module__MytmHG__hpContainer {
+    min-width: 100px;
+  }
+}
+
 /*# sourceMappingURL=apps_web_src_components_Header_module_css_bad6b30c._.single.css.map*/

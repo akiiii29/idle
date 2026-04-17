@@ -127,10 +127,6 @@ export function computeCombatStats(
         const upgradeLevel = item.upgradeLevel || 0;
         const scale = 1 + (upgradeLevel * 0.1);
 
-        if (item.type === "ACCESSORY" || item.type === ("ACCESSORY" as ItemType)) {
-            accessories.push({ ...item, upgradeLevel });
-            continue;
-        }
         const bStr = Math.floor((item.bonusStr || 0) * scale);
         const bAgi = Math.floor((item.bonusAgi || 0) * scale);
         const bDef = Math.floor((item.bonusDef || 0) * scale);
@@ -140,11 +136,14 @@ export function computeCombatStats(
         flat.def += bDef;
         flat.hp += bHp;
         let wPow = 0;
-        if (item.type === "WEAPON" || item.type === ("WEAPON" as ItemType)) {
+        const isAccessory = item.type === "ACCESSORY" || item.type === ("ACCESSORY" as ItemType);
+        const isWeapon = item.type === "WEAPON" || item.type === ("WEAPON" as ItemType);
+        if (isWeapon) {
             wPow = Math.floor((item.power || 0) * scale);
             flat.weaponPower += wPow;
         }
-        const tag = item.type === "WEAPON" || item.type === ("WEAPON" as ItemType) ? "⚔️" : "🛡️";
+        accessories.push({ ...item, upgradeLevel });
+        const tag = isWeapon ? "⚔️" : isAccessory ? "💍" : "🛡️";
         const bits = [
             wPow ? `WP ${wPow}` : null,
             bStr ? `STR+${bStr}` : null,

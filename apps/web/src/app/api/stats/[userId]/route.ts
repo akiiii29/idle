@@ -13,6 +13,7 @@ export async function GET(
     include: {
       beasts: true,
       skills: { include: { skill: true } },
+    inventory: true,
     },
   });
 
@@ -33,7 +34,7 @@ export async function GET(
       talentPoison: user.talentPoison ?? 0,
       title: user.title ?? null,
     },
-    [],
+    user.inventory?.filter((i: any) => i.isEquipped) ?? [],
     user.beasts?.filter((b: any) => b.isEquipped).map((b: any) => enrichBeast(b)) ?? [],
     [],
     undefined

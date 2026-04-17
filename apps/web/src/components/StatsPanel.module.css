@@ -64,6 +64,31 @@
   border-bottom: 1px solid var(--border);
 }
 
+/* ── Progress Bars ── */
+.progressSection {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.progressCard {
+  background: var(--bg-primary);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 0.75rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.progressLabel {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--text-dim);
+}
+
 /* ── Big Base Stats ── */
 .bigStatGrid {
   display: grid;
@@ -73,17 +98,23 @@
 
 .bigStatCard {
   background: var(--bg-primary);
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: 1rem 0.75rem;
+  border: 2px solid var(--border);
+  border-radius: 12px;
+  padding: 1.5rem 1.1rem;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.3rem;
+  gap: 0.4rem;
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s ease, border-color 0.2s ease;
+}
+.bigStatCard:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+  border-color: var(--accent-gold);
 }
 
 .bigStatLabel {
-  font-size: 0.7rem;
+  font-size: 0.78rem;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -92,13 +123,13 @@
 
 .bigStatValue {
   font-family: 'JetBrains Mono', monospace;
-  font-size: 1.6rem;
+  font-size: 2.2rem;
   font-weight: 700;
   line-height: 1;
 }
 
 .bigStatSub {
-  font-size: 0.6rem;
+  font-size: 0.7rem;
   color: var(--text-dim);
 }
 
@@ -118,15 +149,21 @@
   background: var(--bg-primary);
   border: 2px solid var(--border);
   border-radius: 12px;
-  padding: 1.25rem 1rem;
+  padding: 1.75rem 1.4rem;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.3rem;
+  gap: 0.4rem;
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s ease, border-color 0.2s ease;
+}
+.combatCard:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+  border-color: var(--accent-gold);
 }
 
 .combatLabel {
-  font-size: 0.7rem;
+  font-size: 0.78rem;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.08em;
@@ -135,7 +172,7 @@
 
 .combatValue {
   font-family: 'JetBrains Mono', monospace;
-  font-size: 2rem;
+  font-size: 2.8rem;
   font-weight: 700;
   color: var(--accent-gold);
   line-height: 1;
@@ -157,6 +194,12 @@
   flex-direction: column;
   align-items: center;
   gap: 0.2rem;
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s ease, border-color 0.2s ease;
+}
+.pctCard:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 16px rgba(0,0,0,0.5);
+  border-color: var(--accent-purple);
 }
 
 .pctLabel {
@@ -189,6 +232,12 @@
   flex-direction: column;
   align-items: center;
   gap: 0.3rem;
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s ease, border-color 0.2s ease;
+}
+.talentCard:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+  border-color: var(--accent-gold);
 }
 
 .talentIcon {

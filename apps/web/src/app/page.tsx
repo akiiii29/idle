@@ -12,10 +12,17 @@ import HospitalPanel from "@/components/HospitalPanel";
 import TavernPanel from "@/components/TavernPanel";
 import PracticePanel from "@/components/PracticePanel";
 import AutoHuntPanel from "@/components/AutoHuntPanel";
+import UpgradePanel from "@/components/UpgradePanel";
+import SkillsPanel from "@/components/SkillsPanel";
+import QuestsPanel from "@/components/QuestsPanel";
+import AchievementsPanel from "@/components/AchievementsPanel";
+import ProfilePanel from "@/components/ProfilePanel";
+import SynergiesPanel from "@/components/SynergiesPanel";
+import SynergyPanel from "@/components/SynergyPanel";
 import ToastContainer from "@/components/ToastContainer";
 import styles from "./page.module.css";
 
-type ActivePanel = "hunt" | "stats" | "inventory" | "pets" | "shop" | "dungeon" | "hospital" | "tavern" | "practice" | "autohunt";
+type ActivePanel = "hunt" | "stats" | "profile" | "inventory" | "pets" | "shop" | "dungeon" | "hospital" | "tavern" | "practice" | "autohunt" | "upgrade" | "skills" | "quests" | "achievements" | "synergies" | "synergy";
 
 const DISCORD_ID_KEY = "rpg_discord_id";
 
@@ -56,6 +63,17 @@ export default function HomePage() {
     fetchUser();
   }, [fetchUser]);
 
+  // Merge-only update — no API call, just patches local state
+  const mergeUpdate = useCallback((patch: Partial<any>) => {
+    setUser((prev: any) => ({ ...prev, ...patch }));
+  }, []);
+
+  // Refetch full user from server (for actions that create items/pets/etc.)
+  const refetchUser = useCallback(() => {
+    fetchUser();
+  }, [fetchUser]);
+
+  // Hunt changes too many things (gold, items, beasts, exp, etc.) — always refetch
   const onHuntComplete = useCallback(() => {
     fetchUser();
   }, [fetchUser]);
@@ -97,13 +115,20 @@ export default function HomePage() {
         <main className={styles.content}>
           {activePanel === "hunt" && <CombatArena user={user} onHuntComplete={onHuntComplete} />}
           {activePanel === "stats" && <StatsPanel user={user} />}
-          {activePanel === "inventory" && <InventoryPanel user={user} onUpdate={fetchUser} />}
-          {activePanel === "pets" && <PetsPanel user={user} onUpdate={fetchUser} />}
-          {activePanel === "shop" && <ShopPanel user={user} onUpdate={fetchUser} />}
-          {activePanel === "hospital" && <HospitalPanel user={user} onUpdate={fetchUser} />}
-          {activePanel === "tavern" && <TavernPanel user={user} onUpdate={fetchUser} />}
+          {activePanel === "inventory" && <InventoryPanel user={user} onUpdate={mergeUpdate} onRefetch={refetchUser} />}
+          {activePanel === "pets" && <PetsPanel user={user} onUpdate={mergeUpdate} />}
+          {activePanel === "shop" && <ShopPanel user={user} onUpdate={mergeUpdate} onRefetch={refetchUser} />}
+          {activePanel === "hospital" && <HospitalPanel user={user} onUpdate={mergeUpdate} />}
+          {activePanel === "tavern" && <TavernPanel user={user} onUpdate={mergeUpdate} />}
           {activePanel === "practice" && <PracticePanel user={user} />}
-          {activePanel === "autohunt" && <AutoHuntPanel user={user} onUpdate={fetchUser} />}
+          {activePanel === "autohunt" && <AutoHuntPanel user={user} onUpdate={mergeUpdate} />}
+          {activePanel === "upgrade" && <UpgradePanel user={user} onUpdate={mergeUpdate} />}
+          {activePanel === "skills" && <SkillsPanel user={user} onUpdate={mergeUpdate} />}
+          {activePanel === "quests" && <QuestsPanel user={user} onUpdate={mergeUpdate} />}
+          {activePanel === "achievements" && <AchievementsPanel user={user} onUpdate={mergeUpdate} />}
+          {activePanel === "profile" && <ProfilePanel user={user} />}
+          {activePanel === "synergies" && <SynergiesPanel />}
+          {activePanel === "synergy" && <SynergyPanel user={user} />}
         </main>
       </div>
       <ToastContainer />

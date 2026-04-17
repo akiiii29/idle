@@ -87,6 +87,7 @@ export async function POST(request: NextRequest) {
     data: {
       autoHuntCharges: charges - 1,
       lastAutoHuntAt: new Date(),
+      lastAutoHuntChargeAt: new Date(),
     },
   });
 

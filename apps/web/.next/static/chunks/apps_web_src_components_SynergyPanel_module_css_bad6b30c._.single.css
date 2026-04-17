@@ -1,0 +1,170 @@
+/* [project]/apps/web/src/components/SynergyPanel.module.css [app-client] (css) */
+.SynergyPanel-module__1wc15a__panel {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  max-height: calc(100vh - 120px);
+  padding: 1.2rem;
+  overflow-y: auto;
+}
+
+.SynergyPanel-module__1wc15a__title {
+  color: var(--text-primary);
+  margin-bottom: 1rem;
+  font-size: 1.2rem;
+  font-weight: 700;
+}
+
+.SynergyPanel-module__1wc15a__loading {
+  color: var(--text-dim);
+  text-align: center;
+  padding: 2rem;
+}
+
+.SynergyPanel-module__1wc15a__summaryRow {
+  grid-template-columns: repeat(3, 1fr);
+  gap: .6rem;
+  margin-bottom: 1.2rem;
+  display: grid;
+}
+
+.SynergyPanel-module__1wc15a__summaryCard {
+  background: var(--bg-primary);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  flex-direction: column;
+  align-items: center;
+  gap: .1rem;
+  padding: .7rem;
+  display: flex;
+}
+
+.SynergyPanel-module__1wc15a__summaryVal {
+  color: var(--text-primary);
+  font-size: 1.4rem;
+  font-weight: 700;
+}
+
+.SynergyPanel-module__1wc15a__summaryLabel {
+  color: var(--text-dim);
+  font-size: .7rem;
+}
+
+.SynergyPanel-module__1wc15a__sectionTitle {
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  margin-top: 1rem;
+  margin-bottom: .6rem;
+  font-size: .78rem;
+  font-weight: 700;
+}
+
+.SynergyPanel-module__1wc15a__emptyMsg {
+  color: var(--text-dim);
+  margin-bottom: .8rem;
+  font-size: .78rem;
+}
+
+.SynergyPanel-module__1wc15a__grid {
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: .8rem;
+  margin-bottom: .5rem;
+  display: grid;
+}
+
+.SynergyPanel-module__1wc15a__synCard {
+  background: var(--bg-primary);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  flex-direction: column;
+  gap: .35rem;
+  padding: .9rem;
+  transition: border-color .15s;
+  display: flex;
+}
+
+.SynergyPanel-module__1wc15a__activeCard {
+  border-color: var(--hp-green);
+}
+
+.SynergyPanel-module__1wc15a__activeCard:hover {
+  border-color: var(--hp-green);
+  box-shadow: 0 0 12px rgba(74, 222, 128, .15);
+}
+
+.SynergyPanel-module__1wc15a__comboCard {
+  border-color: var(--accent-purple);
+}
+
+.SynergyPanel-module__1wc15a__comboCard:hover {
+  border-color: var(--accent-purple);
+  box-shadow: 0 0 12px rgba(139, 92, 246, .2);
+}
+
+.SynergyPanel-module__1wc15a__potentialCard:hover {
+  border-color: var(--accent-purple);
+}
+
+.SynergyPanel-module__1wc15a__synName {
+  color: var(--text-primary);
+  font-size: .88rem;
+  font-weight: 700;
+}
+
+.SynergyPanel-module__1wc15a__synDesc {
+  color: var(--text-dim);
+  font-size: .75rem;
+}
+
+.SynergyPanel-module__1wc15a__synBonus {
+  color: var(--accent-gold);
+  background: rgba(240, 192, 64, .1);
+  border: 1px solid rgba(240, 192, 64, .25);
+  border-radius: 4px;
+  padding: .2rem .4rem;
+  font-size: .72rem;
+  font-weight: 600;
+}
+
+.SynergyPanel-module__1wc15a__flagRow, .SynergyPanel-module__1wc15a__statusRow {
+  flex-wrap: wrap;
+  gap: .25rem;
+  display: flex;
+}
+
+.SynergyPanel-module__1wc15a__flagBadge {
+  border: 1px solid;
+  border-radius: 4px;
+  padding: .15rem .35rem;
+  font-family: monospace;
+  font-size: .62rem;
+  font-weight: 600;
+}
+
+.SynergyPanel-module__1wc15a__missingBadge {
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  border-radius: 4px;
+  align-items: center;
+  gap: .2rem;
+  padding: .15rem .35rem;
+  font-family: monospace;
+  font-size: .62rem;
+  display: flex;
+}
+
+.SynergyPanel-module__1wc15a__hintText {
+  color: var(--text-dim);
+  margin-left: .2rem;
+  font-family: monospace;
+  font-size: .6rem;
+}
+
+.SynergyPanel-module__1wc15a__hintLine {
+  color: var(--text-dim);
+  margin-top: .1rem;
+  font-size: .7rem;
+}
+
+/*# sourceMappingURL=apps_web_src_components_SynergyPanel_module_css_bad6b30c._.single.css.map*/

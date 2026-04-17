@@ -1,0 +1,252 @@
+/* [project]/apps/web/src/components/QuestsPanel.module.css [app-client] (css) */
+.QuestsPanel-module__8U1UHW__panel {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  flex-direction: column;
+  flex: 1;
+  gap: 1rem;
+  padding: 1rem;
+  display: flex;
+  overflow-y: auto;
+}
+
+.QuestsPanel-module__8U1UHW__loading {
+  color: var(--text-dim);
+  text-align: center;
+  padding: 1rem;
+  font-size: .85rem;
+}
+
+.QuestsPanel-module__8U1UHW__header {
+  justify-content: space-between;
+  align-items: center;
+  display: flex;
+}
+
+.QuestsPanel-module__8U1UHW__title {
+  color: var(--accent-gold);
+  margin: 0;
+  font-family: Rajdhani, sans-serif;
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.QuestsPanel-module__8U1UHW__goldDisplay {
+  color: var(--accent-gold);
+  font-family: JetBrains Mono, monospace;
+  font-size: .9rem;
+  font-weight: 600;
+}
+
+.QuestsPanel-module__8U1UHW__progressBar {
+  background: var(--bg-primary);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  height: 8px;
+  overflow: hidden;
+}
+
+.QuestsPanel-module__8U1UHW__progressFill {
+  background: linear-gradient(90deg, var(--accent-gold), #f0c040);
+  border-radius: 4px;
+  height: 100%;
+  transition: width .6s ease-out;
+}
+
+.QuestsPanel-module__8U1UHW__progressLabel {
+  color: var(--text-dim);
+  text-align: center;
+  margin: -.5rem 0 0;
+  font-size: .72rem;
+}
+
+.QuestsPanel-module__8U1UHW__toast {
+  z-index: 1000;
+  border-radius: 8px;
+  max-width: 300px;
+  padding: .75rem 1rem;
+  font-size: .85rem;
+  font-weight: 500;
+  animation: .2s ease-out QuestsPanel-module__8U1UHW__slideIn;
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, .3);
+}
+
+.QuestsPanel-module__8U1UHW__toast.QuestsPanel-module__8U1UHW__success {
+  border: 1px solid var(--hp-green);
+  color: var(--hp-green);
+  background: rgba(34, 197, 94, .15);
+}
+
+.QuestsPanel-module__8U1UHW__toast.QuestsPanel-module__8U1UHW__error {
+  border: 1px solid var(--hp-red);
+  color: var(--hp-red);
+  background: rgba(239, 68, 68, .15);
+}
+
+@keyframes QuestsPanel-module__8U1UHW__slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.QuestsPanel-module__8U1UHW__layout {
+  flex-direction: column;
+  gap: 1.25rem;
+  display: flex;
+}
+
+.QuestsPanel-module__8U1UHW__section {
+  flex-direction: column;
+  gap: .5rem;
+  display: flex;
+}
+
+.QuestsPanel-module__8U1UHW__sectionTitle {
+  text-transform: uppercase;
+  letter-spacing: .1em;
+  color: var(--text-dim);
+  margin: 0;
+  font-size: .7rem;
+  font-weight: 600;
+}
+
+.QuestsPanel-module__8U1UHW__questList {
+  flex-direction: column;
+  gap: .4rem;
+  display: flex;
+}
+
+.QuestsPanel-module__8U1UHW__questCard {
+  background: var(--bg-primary);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 1.1rem 1.5rem;
+  transition: border-color .2s, box-shadow .2s;
+  display: flex;
+}
+
+.QuestsPanel-module__8U1UHW__questCard:hover {
+  border-color: var(--accent-gold);
+  box-shadow: 0 0 10px rgba(240, 192, 64, .2);
+}
+
+.QuestsPanel-module__8U1UHW__questCard.QuestsPanel-module__8U1UHW__completed {
+  border-color: rgba(34, 197, 94, .4);
+}
+
+.QuestsPanel-module__8U1UHW__questCard.QuestsPanel-module__8U1UHW__claimed {
+  opacity: .6;
+}
+
+.QuestsPanel-module__8U1UHW__questLeft {
+  flex: 1;
+  align-items: center;
+  gap: .75rem;
+  display: flex;
+}
+
+.QuestsPanel-module__8U1UHW__questEmoji {
+  flex-shrink: 0;
+  font-size: 2.25rem;
+}
+
+.QuestsPanel-module__8U1UHW__questInfo {
+  flex-direction: column;
+  flex: 1;
+  gap: .2rem;
+  display: flex;
+}
+
+.QuestsPanel-module__8U1UHW__questDesc {
+  color: var(--text);
+  margin: 0;
+  font-size: .95rem;
+  font-weight: 600;
+}
+
+.QuestsPanel-module__8U1UHW__questBar {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  height: 7px;
+  overflow: hidden;
+}
+
+.QuestsPanel-module__8U1UHW__questBarFill {
+  background: linear-gradient(90deg, var(--accent-purple), #c084fc);
+  border-radius: 4px;
+  height: 100%;
+  transition: width .5s ease-out;
+}
+
+.QuestsPanel-module__8U1UHW__questCard.QuestsPanel-module__8U1UHW__completed .QuestsPanel-module__8U1UHW__questBarFill {
+  background: linear-gradient(90deg, var(--hp-green), #4ade80);
+}
+
+.QuestsPanel-module__8U1UHW__questProg {
+  color: var(--text-dim);
+  margin: 0;
+  font-family: JetBrains Mono, monospace;
+  font-size: .72rem;
+}
+
+.QuestsPanel-module__8U1UHW__questRight {
+  flex-direction: column;
+  flex-shrink: 0;
+  align-items: flex-end;
+  gap: .4rem;
+  display: flex;
+}
+
+.QuestsPanel-module__8U1UHW__goldReward {
+  color: var(--accent-gold);
+  font-family: JetBrains Mono, monospace;
+  font-size: .95rem;
+  font-weight: 600;
+}
+
+.QuestsPanel-module__8U1UHW__claimBtn {
+  background: linear-gradient(135deg, var(--hp-green), #16a34a);
+  border: 1px solid var(--hp-green);
+  color: #000;
+  cursor: pointer;
+  border-radius: 6px;
+  padding: .45rem 1rem;
+  font-size: .85rem;
+  font-weight: 700;
+  transition: all .2s;
+}
+
+.QuestsPanel-module__8U1UHW__claimBtn:hover:not(:disabled) {
+  transform: scale(1.05);
+  box-shadow: 0 0 12px rgba(34, 197, 94, .5);
+}
+
+.QuestsPanel-module__8U1UHW__claimBtn:disabled {
+  opacity: .5;
+  cursor: not-allowed;
+}
+
+.QuestsPanel-module__8U1UHW__readyBadge {
+  color: var(--hp-green);
+  font-size: 1.4rem;
+}
+
+.QuestsPanel-module__8U1UHW__claimedBadge {
+  font-size: 1.4rem;
+}
+
+/*# sourceMappingURL=apps_web_src_components_QuestsPanel_module_css_bad6b30c._.single.css.map*/

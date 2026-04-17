@@ -12,24 +12,26 @@
 
 .ToastContainer-module__Z1OQKq__toast {
   pointer-events: auto;
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
   border-radius: 8px;
-  max-width: 280px;
+  max-width: 320px;
   padding: .75rem 1rem;
   font-size: .85rem;
   font-weight: 500;
-  animation: .2s ease-out ToastContainer-module__Z1OQKq__slideIn;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, .3);
+  animation: .3s cubic-bezier(.34, 1.56, .64, 1) both ToastContainer-module__Z1OQKq__toast-in;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, .4);
 }
 
-@keyframes ToastContainer-module__Z1OQKq__slideIn {
+@keyframes ToastContainer-module__Z1OQKq__toast-in {
   from {
     opacity: 0;
-    transform: translateX(20px);
+    transform: translateX(20px)scale(.9);
   }
 
   to {
     opacity: 1;
-    transform: translateX(0);
+    transform: translateX(0)scale(1);
   }
 }
 

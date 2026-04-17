@@ -1,0 +1,113 @@
+/* [project]/apps/web/src/components/SynergiesPanel.module.css [app-client] (css) */
+.SynergiesPanel-module__gpJk6G__panel {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  max-height: calc(100vh - 120px);
+  padding: 1.2rem;
+  overflow-y: auto;
+}
+
+.SynergiesPanel-module__gpJk6G__title {
+  color: var(--text-primary);
+  margin-bottom: .2rem;
+  font-size: 1.2rem;
+  font-weight: 700;
+}
+
+.SynergiesPanel-module__gpJk6G__subtitle {
+  color: var(--text-dim);
+  margin-bottom: 1rem;
+  font-size: .75rem;
+}
+
+.SynergiesPanel-module__gpJk6G__searchInput {
+  background: var(--bg-primary);
+  border: 1px solid var(--border);
+  width: 100%;
+  color: var(--text-primary);
+  box-sizing: border-box;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+  padding: .5rem .8rem;
+  font-size: .85rem;
+}
+
+.SynergiesPanel-module__gpJk6G__searchInput::placeholder {
+  color: var(--text-dim);
+}
+
+.SynergiesPanel-module__gpJk6G__grid {
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: .8rem;
+  display: grid;
+}
+
+.SynergiesPanel-module__gpJk6G__synergyCard {
+  background: var(--bg-primary);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  flex-direction: column;
+  gap: .35rem;
+  padding: .9rem;
+  transition: border-color .15s;
+  display: flex;
+}
+
+.SynergiesPanel-module__gpJk6G__synergyCard:hover {
+  border-color: var(--accent-purple);
+}
+
+.SynergiesPanel-module__gpJk6G__synName {
+  color: var(--text-primary);
+  font-size: .88rem;
+  font-weight: 700;
+}
+
+.SynergiesPanel-module__gpJk6G__synDesc {
+  color: var(--text-dim);
+  font-size: .75rem;
+}
+
+.SynergiesPanel-module__gpJk6G__synBonus {
+  color: var(--accent-gold);
+  background: rgba(240, 192, 64, .1);
+  border: 1px solid rgba(240, 192, 64, .3);
+  border-radius: 5px;
+  align-items: center;
+  gap: .3rem;
+  padding: .25rem .5rem;
+  font-size: .75rem;
+  font-weight: 600;
+  display: flex;
+}
+
+.SynergiesPanel-module__gpJk6G__flagRow {
+  flex-wrap: wrap;
+  gap: .25rem;
+  display: flex;
+}
+
+.SynergiesPanel-module__gpJk6G__flagBadge {
+  border: 1px solid;
+  border-radius: 4px;
+  padding: .15rem .4rem;
+  font-family: monospace;
+  font-size: .62rem;
+  font-weight: 600;
+}
+
+.SynergiesPanel-module__gpJk6G__synTips {
+  color: var(--text-dim);
+  margin-top: .1rem;
+  font-size: .7rem;
+}
+
+.SynergiesPanel-module__gpJk6G__empty {
+  color: var(--text-dim);
+  text-align: center;
+  grid-column: 1 / -1;
+  padding: 2rem;
+}
+
+/*# sourceMappingURL=apps_web_src_components_SynergiesPanel_module_css_bad6b30c._.single.css.map*/

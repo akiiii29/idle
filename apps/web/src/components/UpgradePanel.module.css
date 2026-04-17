@@ -1,0 +1,493 @@
+.panel {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  flex: 1;
+  overflow: hidden;
+}
+
+.loading {
+  color: var(--text-dim);
+  font-size: 0.85rem;
+  text-align: center;
+  padding: 1rem;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.title {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin: 0;
+  color: var(--accent-gold);
+}
+
+.resourceRow {
+  display: flex;
+  gap: 1rem;
+}
+
+.scrapDisplay {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.85rem;
+  color: var(--accent-purple);
+  font-weight: 600;
+}
+
+.goldDisplay {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.85rem;
+  color: var(--accent-gold);
+  font-weight: 600;
+}
+
+.layout {
+  display: flex;
+  gap: 1rem;
+  flex: 1;
+  overflow: hidden;
+}
+
+/* Left column */
+.gearList {
+  width: 320px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  overflow-y: auto;
+}
+
+.sectionTitle {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-dim);
+  margin: 0;
+  font-weight: 600;
+}
+
+.empty {
+  font-size: 0.8rem;
+  color: var(--text-dim);
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  justify-content: center;
+  padding: 1.5rem;
+}
+
+.empty::before {
+  content: "⚔️";
+  font-size: 1.4rem;
+  opacity: 0.5;
+}
+
+.gearGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+}
+
+.gearCard {
+  background: var(--bg-primary);
+  border: 2px solid #444;
+  border-radius: 10px;
+  padding: 0.75rem 0.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.2rem;
+  cursor: pointer;
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s ease, border-color 0.2s ease;
+  position: relative;
+  text-align: center;
+}
+
+.gearCard:hover {
+  transform: translateY(-4px) scale(1.03);
+}
+
+.gearCard.selectedCard {
+  border-color: var(--accent-gold) !important;
+  box-shadow: 0 0 16px rgba(240, 192, 64, 0.5), 0 8px 24px rgba(0,0,0,0.5);
+}
+
+/* Rarity glows */
+.rarity-glow-common:hover { border-color: var(--rarity-common); box-shadow: 0 0 10px rgba(156, 163, 175, 0.5), 0 8px 24px rgba(0,0,0,0.5); }
+.rarity-glow-rare:hover { border-color: var(--rarity-rare); box-shadow: 0 0 14px rgba(59, 130, 246, 0.7), 0 8px 24px rgba(0,0,0,0.5); }
+.rarity-glow-epic:hover { border-color: var(--rarity-epic); box-shadow: 0 0 18px rgba(155, 109, 255, 0.8), 0 8px 24px rgba(0,0,0,0.5); }
+.rarity-glow-legendary:hover { border-color: var(--rarity-legendary); box-shadow: 0 0 24px rgba(240, 192, 64, 0.9), 0 0 48px rgba(240, 192, 64, 0.35), 0 8px 24px rgba(0,0,0,0.5); }
+
+.gearLevel {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  background: var(--accent-gold);
+  color: #000;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 0.1rem 0.35rem;
+  border-radius: 4px;
+}
+
+.gearIcon {
+  font-size: 1.5rem;
+}
+
+.gearName {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--text);
+  line-height: 1.2;
+}
+
+.gearRarity {
+  font-size: 0.6rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.gearPower {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.65rem;
+  color: var(--text-dim);
+}
+
+/* Scrap section */
+.scrapSection {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.scrapBtns {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.scrapBtn {
+  padding: 0.45rem 0.75rem;
+  background: var(--bg-primary);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text);
+  font-size: 0.72rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.scrapBtn:hover:not(:disabled) {
+  border-color: var(--accent-purple);
+  color: var(--accent-purple);
+  box-shadow: 0 0 8px rgba(139, 92, 246, 0.4);
+}
+
+.scrapBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.scrapMsg {
+  font-size: 0.72rem;
+  color: var(--accent-gold);
+  margin: 0;
+}
+
+/* Right: Preview panel */
+.previewPanel {
+  flex: 1;
+  background: var(--bg-primary);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+}
+
+.noSelection {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  color: var(--text-dim);
+  font-size: 0.85rem;
+  text-align: center;
+}
+
+.noSelectIcon {
+  font-size: 3rem;
+  opacity: 0.3;
+}
+
+.previewContent {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.previewHeader {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.previewIcon {
+  font-size: 2.5rem;
+}
+
+.previewName {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 1.2rem;
+  font-weight: 700;
+  margin: 0;
+  color: var(--text);
+}
+
+.previewRarity {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin: 0;
+}
+
+.statGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.5rem;
+}
+
+.statItem {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.15rem;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.strColor { color: #ff6b6b; }
+.agiColor { color: #4ecdc4; }
+.hpColor { color: #ef4444; }
+
+.divider {
+  height: 1px;
+  background: var(--border);
+}
+
+/* Rate section */
+.rateSection {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.rateBar {
+  height: 10px;
+  background: var(--bg-card);
+  border-radius: 5px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+}
+
+.rateFill {
+  height: 100%;
+  border-radius: 5px;
+  transition: width 0.6s ease-out, background 0.3s;
+}
+
+.rateRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.rateLabel {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-dim);
+}
+
+.rateValue {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.pityBadge {
+  font-size: 0.7rem;
+  color: var(--accent-gold);
+  margin-left: 0.25rem;
+}
+
+.pityMax {
+  font-size: 0.75rem;
+  color: var(--accent-gold);
+}
+
+/* Cost section */
+.costSection {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.costLabel {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-dim);
+  margin: 0;
+}
+
+.costRow {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.costScrap {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--accent-purple);
+}
+
+.costGold {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--accent-gold);
+}
+
+.costNote {
+  font-size: 0.65rem;
+  color: var(--text-dim);
+  margin: 0;
+}
+
+/* Result card */
+.resultCard {
+  border-radius: 10px;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  animation: card-enter 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes card-enter {
+  from { opacity: 0; transform: scale(0.9) translateY(10px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.winResult {
+  background: rgba(34, 197, 94, 0.08);
+  border: 2px solid var(--hp-green);
+  box-shadow: 0 0 20px rgba(34, 197, 94, 0.2);
+}
+
+.failResult {
+  background: rgba(239, 68, 68, 0.08);
+  border: 2px solid var(--hp-red);
+  box-shadow: 0 0 20px rgba(239, 68, 68, 0.2);
+}
+
+.resultTitle {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.winResult .resultTitle { color: var(--hp-green); }
+.failResult .resultTitle { color: var(--hp-red); }
+
+.pityNote {
+  font-size: 0.75rem;
+  color: var(--accent-gold);
+  margin: 0;
+}
+
+.resultMsg {
+  font-size: 0.8rem;
+  color: var(--text-dim);
+  margin: 0;
+}
+
+.resultLevel {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.winResult .resultLevel { color: var(--hp-green); }
+.failResult .resultLevel { color: var(--hp-red); }
+
+/* Upgrade button */
+.upgradeBtn {
+  width: 100%;
+  padding: 1rem;
+  background: linear-gradient(135deg, var(--accent-gold), #d4a030);
+  border: 2px solid var(--accent-gold);
+  border-radius: 8px;
+  color: #000;
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 1rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+  box-shadow: 0 4px 12px rgba(240, 192, 64, 0.3);
+}
+
+.upgradeBtn:hover:not(:disabled) {
+  transform: translateY(-3px) scale(1.02);
+  box-shadow: 0 0 28px rgba(240, 192, 64, 0.7), 0 8px 20px rgba(0,0,0,0.4);
+}
+
+.upgradeBtn:active:not(:disabled) {
+  transform: translateY(0) scale(0.98);
+}
+
+.upgradeBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.upgradeBtn.upgrading {
+  animation: pulse-glow 1s infinite;
+}
+
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 4px 12px rgba(240, 192, 64, 0.3); }
+  50% { box-shadow: 0 0 28px rgba(240, 192, 64, 0.7), 0 8px 20px rgba(0,0,0,0.4); }
+}

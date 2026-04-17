@@ -1,0 +1,110 @@
+.panel {
+  background: var(--bg-secondary);
+  border-radius: 12px;
+  padding: 1.2rem;
+  border: 1px solid var(--border);
+  max-height: calc(100vh - 120px);
+  overflow-y: auto;
+}
+
+.title {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 0.2rem;
+}
+
+.subtitle {
+  font-size: 0.75rem;
+  color: var(--text-dim);
+  margin-bottom: 1rem;
+}
+
+.searchInput {
+  width: 100%;
+  padding: 0.5rem 0.8rem;
+  background: var(--bg-primary);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text-primary);
+  font-size: 0.85rem;
+  margin-bottom: 1rem;
+  box-sizing: border-box;
+}
+
+.searchInput::placeholder {
+  color: var(--text-dim);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 0.8rem;
+}
+
+.synergyCard {
+  background: var(--bg-primary);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 0.9rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  transition: border-color 0.15s;
+}
+
+.synergyCard:hover {
+  border-color: var(--accent-purple);
+}
+
+.synName {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.synDesc {
+  font-size: 0.75rem;
+  color: var(--text-dim);
+}
+
+.synBonus {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--accent-gold);
+  background: rgba(240, 192, 64, 0.1);
+  padding: 0.25rem 0.5rem;
+  border-radius: 5px;
+  border: 1px solid rgba(240, 192, 64, 0.3);
+}
+
+.flagRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+}
+
+.flagBadge {
+  font-size: 0.62rem;
+  padding: 0.15rem 0.4rem;
+  border-radius: 4px;
+  border: 1px solid;
+  font-weight: 600;
+  font-family: monospace;
+}
+
+.synTips {
+  font-size: 0.7rem;
+  color: var(--text-dim);
+  margin-top: 0.1rem;
+}
+
+.empty {
+  color: var(--text-dim);
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 2rem;
+}

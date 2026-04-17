@@ -1,4 +1,4 @@
-// File: D:\works\idle\idle\apps\web\src\app\layout.tsx
+// File: D:\OneDrive - Patroids Creative Works Pte Ltd\idle\apps\web\src\app\layout.tsx
 import * as entry from '../../../src/app/layout.js'
 import type { ResolvingMetadata, ResolvingViewport } from 'next/dist/lib/metadata/types/metadata-interface.js'
 

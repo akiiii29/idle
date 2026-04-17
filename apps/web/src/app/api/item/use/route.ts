@@ -14,7 +14,7 @@ export async function POST(request: NextRequest) {
 
   const user = await prisma.user.findUnique({
     where: { id: userId },
-    include: { beasts: true },
+    include: { beasts: true, inventory: true },
   });
 
   if (!user) {
@@ -54,7 +54,7 @@ export async function POST(request: NextRequest) {
   }
 
   // POTION, MEAT, CONSUMABLE — heal based on power
-  const equippedItems: any[] = [];
+  const equippedItems = user.inventory?.filter((i: any) => i.isEquipped) ?? [];
   const equippedPets = user.beasts?.filter((b: any) => b.isEquipped).map((b: any) => enrichBeast(b)) ?? [];
   const stats = computeCombatStats(
     {

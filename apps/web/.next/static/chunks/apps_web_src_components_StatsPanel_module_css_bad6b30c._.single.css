@@ -64,6 +64,30 @@
   font-size: .7rem;
 }
 
+.StatsPanel-module__E-e10W__progressSection {
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  display: grid;
+}
+
+.StatsPanel-module__E-e10W__progressCard {
+  background: var(--bg-primary);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  flex-direction: column;
+  gap: .5rem;
+  padding: .75rem 1rem;
+  display: flex;
+}
+
+.StatsPanel-module__E-e10W__progressLabel {
+  color: var(--text-dim);
+  justify-content: space-between;
+  font-size: .72rem;
+  font-weight: 600;
+  display: flex;
+}
+
 .StatsPanel-module__E-e10W__bigStatGrid {
   grid-template-columns: repeat(4, 1fr);
   gap: .75rem;
@@ -72,33 +96,40 @@
 
 .StatsPanel-module__E-e10W__bigStatCard {
   background: var(--bg-primary);
-  border: 1px solid var(--border);
-  border-radius: 10px;
+  border: 2px solid var(--border);
+  border-radius: 12px;
   flex-direction: column;
   align-items: center;
-  gap: .3rem;
-  padding: 1rem .75rem;
+  gap: .4rem;
+  padding: 1.5rem 1.1rem;
+  transition: transform .2s cubic-bezier(.34, 1.56, .64, 1), box-shadow .2s, border-color .2s;
   display: flex;
+}
+
+.StatsPanel-module__E-e10W__bigStatCard:hover {
+  border-color: var(--accent-gold);
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, .5);
 }
 
 .StatsPanel-module__E-e10W__bigStatLabel {
   text-transform: uppercase;
   letter-spacing: .05em;
   color: var(--text-dim);
-  font-size: .7rem;
+  font-size: .78rem;
   font-weight: 600;
 }
 
 .StatsPanel-module__E-e10W__bigStatValue {
   font-family: JetBrains Mono, monospace;
-  font-size: 1.6rem;
+  font-size: 2.2rem;
   font-weight: 700;
   line-height: 1;
 }
 
 .StatsPanel-module__E-e10W__bigStatSub {
   color: var(--text-dim);
-  font-size: .6rem;
+  font-size: .7rem;
 }
 
 .StatsPanel-module__E-e10W__strColor {
@@ -129,23 +160,30 @@
   border-radius: 12px;
   flex-direction: column;
   align-items: center;
-  gap: .3rem;
-  padding: 1.25rem 1rem;
+  gap: .4rem;
+  padding: 1.75rem 1.4rem;
+  transition: transform .2s cubic-bezier(.34, 1.56, .64, 1), box-shadow .2s, border-color .2s;
   display: flex;
+}
+
+.StatsPanel-module__E-e10W__combatCard:hover {
+  border-color: var(--accent-gold);
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, .5);
 }
 
 .StatsPanel-module__E-e10W__combatLabel {
   text-transform: uppercase;
   letter-spacing: .08em;
   color: var(--text-dim);
-  font-size: .7rem;
+  font-size: .78rem;
   font-weight: 600;
 }
 
 .StatsPanel-module__E-e10W__combatValue {
   color: var(--accent-gold);
   font-family: JetBrains Mono, monospace;
-  font-size: 2rem;
+  font-size: 2.8rem;
   font-weight: 700;
   line-height: 1;
 }
@@ -164,7 +202,14 @@
   align-items: center;
   gap: .2rem;
   padding: .6rem;
+  transition: transform .2s cubic-bezier(.34, 1.56, .64, 1), box-shadow .2s, border-color .2s;
   display: flex;
+}
+
+.StatsPanel-module__E-e10W__pctCard:hover {
+  border-color: var(--accent-purple);
+  transform: translateY(-3px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, .5);
 }
 
 .StatsPanel-module__E-e10W__pctLabel {
@@ -195,7 +240,14 @@
   align-items: center;
   gap: .3rem;
   padding: 1rem;
+  transition: transform .2s cubic-bezier(.34, 1.56, .64, 1), box-shadow .2s, border-color .2s;
   display: flex;
+}
+
+.StatsPanel-module__E-e10W__talentCard:hover {
+  border-color: var(--accent-gold);
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, .5);
 }
 
 .StatsPanel-module__E-e10W__talentIcon {

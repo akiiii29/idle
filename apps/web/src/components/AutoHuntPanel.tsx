@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import styles from "./AutoHuntPanel.module.css";
 
-export default function AutoHuntPanel({ user, onUpdate }: { user: any; onUpdate: () => void }) {
+export default function AutoHuntPanel({ user, onUpdate }: { user: any; onUpdate: (patch: any) => void }) {
   const [autoHunt, setAutoHunt] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [running, setRunning] = useState(false);
@@ -36,7 +36,13 @@ export default function AutoHuntPanel({ user, onUpdate }: { user: any; onUpdate:
       const data = await res.json();
       if (res.ok) {
         setResult(data);
-        onUpdate();
+        onUpdate({
+          gold: (user.gold ?? 0) + data.goldGained,
+          exp: (user.exp ?? 0) + data.expGained,
+          currentHp: data.hpRemaining,
+          autoHuntCharges: Math.max(0, (user.autoHuntCharges ?? 3) - 1),
+          hospitalUntil: data.status === "DIED" ? new Date(Date.now() + 30 * 60 * 1000) : user.hospitalUntil,
+        });
       } else {
         alert(data.error || "Failed");
       }

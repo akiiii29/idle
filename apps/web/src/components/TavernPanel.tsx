@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import styles from "./TavernPanel.module.css";
 
-export default function TavernPanel({ user, onUpdate }: { user: any; onUpdate: () => void }) {
+export default function TavernPanel({ user, onUpdate }: { user: any; onUpdate: (patch: any) => void }) {
   const [tavern, setTavern] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [action, setAction] = useState<string | null>(null);
@@ -41,16 +41,18 @@ export default function TavernPanel({ user, onUpdate }: { user: any; onUpdate: (
       if (res.ok) {
         if (actionType === "start") {
           showToast(`Rest started! +${data.healHp} HP for ${data.costGold} gold`, "success");
+          onUpdate({ gold: (user.gold ?? 0) - data.costGold, isBusy: true, busyUntil: data.endTime, tavernUntil: data.endTime });
         } else if (actionType === "stop") {
-          showToast("Left the tavern.", "success");
+          showToast(`Left the tavern. Healed ${data.healedHp ?? 0} HP!`, "success");
+          onUpdate({ isBusy: false, busyUntil: null, tavernUntil: null, currentHp: data.newHp ?? user.currentHp });
+          fetchTavern();
         } else if (actionType === "gamble") {
           showToast(
             data.isWin ? `🎊 Win! +${data.goldGained} gold` : `💀 Lost! ${data.goldGained} gold`,
             data.isWin ? "success" : "error"
           );
+          onUpdate({ gold: data.newGold, gambleStreak: data.newStreak });
         }
-        onUpdate();
-        fetchTavern();
       } else {
         showToast(data.error || "Failed", "error");
       }

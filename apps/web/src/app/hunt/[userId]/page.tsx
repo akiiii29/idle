@@ -6,6 +6,7 @@ import { useParams } from "next/navigation";
 export default function HuntPage() {
   const { userId } = useParams();
   const [user, setUser] = useState<any>(null);
+  const [computedMaxHp, setComputedMaxHp] = useState<number>(100);
   const [hunting, setHunting] = useState(false);
   const [result, setResult] = useState<any>(null);
   const [error, setError] = useState("");
@@ -18,6 +19,16 @@ export default function HuntPage() {
         .catch(() => setError("Failed to load user"));
     }
   }, [userId]);
+
+  useEffect(() => {
+    if (!userId) return;
+    fetch(`/api/stats/${userId}`)
+      .then((r) => r.json())
+      .then((data) => {
+        if (data?.final?.maxHp) setComputedMaxHp(data.final.maxHp);
+      })
+      .catch(() => {});
+  }, [userId, user?.inventory?.length, user?.beasts?.length, user?.level]);
 
   async function doHunt(type: "normal" | "boss" = "normal") {
     if (!userId) return;
@@ -112,7 +123,7 @@ export default function HuntPage() {
 
       <div style={{ marginTop: "1rem" }}>
         <p style={{ color: "#888", fontSize: "0.85rem" }}>
-          HP: {user.currentHp} / {user.maxHp} | Gold: {user.gold.toLocaleString()}
+          HP: {user.currentHp} / {computedMaxHp} | Gold: {user.gold.toLocaleString()}
         </p>
       </div>
     </div>
